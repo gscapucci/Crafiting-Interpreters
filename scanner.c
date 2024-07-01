@@ -130,11 +130,13 @@ void string(Scanner *scan) {
     advance(scan);
 
     
-    uint64_t len = (scan->current - 1) - (scan->start + 1);
+    uint64_t start = scan->start + 1; // Ignora a primeira aspas
+    uint64_t len = scan->current - start - 1; // Calcula o comprimento da string sem as aspas
+
     char *value = malloc(len + 1);
-    memcpy(value, scan->source + scan->current + 1, len);
-    value[len] = 0;
-    
+    memcpy(value, &scan->source[start], len);
+    value[len] = '\0';
+
     printf("%s\n", value);fflush(stdout);
 
     Object obj = {0};
