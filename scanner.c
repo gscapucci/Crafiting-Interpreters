@@ -130,8 +130,8 @@ void string(Scanner *scan) {
     advance(scan);
 
     
-    uint64_t start = scan->start + 1; // Ignora a primeira aspas
-    uint64_t len = scan->current - start - 1; // Calcula o comprimento da string sem as aspas
+    uint64_t start = scan->start + 1;
+    uint64_t len = scan->current - start - 1;
 
     char *value = malloc(len + 1);
     memcpy(value, &scan->source[start], len);
