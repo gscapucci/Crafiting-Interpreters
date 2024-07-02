@@ -3,6 +3,7 @@
 
 #include "token_vec.h"
 #include "error.h"
+#include "hashmap.h"
 
 typedef struct Scanner Scanner;
 struct Scanner {
@@ -11,6 +12,8 @@ struct Scanner {
     uint64_t start;
     uint64_t current;
     uint64_t line;
+
+    HashMap keywords;
 };
 
 Scanner create_scanner(const char *source);

@@ -1,11 +1,11 @@
 #include "../include/error.h"
 
-void error(int line, const char *message) {
+void error(uint64_t line, const char *message) {
     report(line, "", message);
 }
 
-void report(int line, const char *where, const char *message) {
-    printf("[line %d] Error%s: %s\n", line, where, message);
+void report(uint64_t line, const char *where, const char *message) {
+    printf("[line %ld] Error%s: %s\n", line, where, message);
     fflush(stdout);
     lox.hasError = true;
 }

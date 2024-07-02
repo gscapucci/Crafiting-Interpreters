@@ -5,19 +5,20 @@ ALLFILES= $(INPUTFILES) $(HEADER_FILES)
 FLAGS=-Wall -Wextra -Wpedantic
 LINK=
 OUTPUT=bin/lox
+OUTPUT_DBG=bin/a.out
 
 
 lox: $(ALLFILES)
 	if [ -d "bin/" ]; then\
 		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
-		gcc -g $(INPUTFILES) $(LINK) -o bin/a.out;\
+		gcc -g $(INPUTFILES) $(LINK) -o $(OUTPUT_DBG);\
 	else\
 		mkdir bin;\
 		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
-		gcc -g $(INPUTFILES) $(LINK) -o bin/a.out;\
+		gcc -g $(INPUTFILES) $(LINK) -o $(OUTPUT_DBG);\
 	fi
 
 
 memcheck:
 	make
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./$(OUTPUT)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./$(OUTPUT_DBG)
