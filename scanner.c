@@ -129,19 +129,14 @@ void string(Scanner *scan) {
 
     advance(scan);
 
+    Object obj = {0};
+    obj.type = ObjectTypeString;
     
     uint64_t start = scan->start + 1;
     uint64_t len = scan->current - start - 1;
 
-    char *value = malloc(len + 1);
-    memcpy(value, &scan->source[start], len);
-    value[len] = '\0';
+    memcpy(obj.string, &scan->source[start], len);
 
-    printf("%s\n", value);fflush(stdout);
-
-    Object obj = {0};
-    strcpy(obj.string, value);
-    obj.type = ObjectTypeString;
-    token_vec_push(&scan->tokens, create_token(STRING, value, obj, scan->line));
+    token_vec_push(&scan->tokens, create_token(STRING, obj.string, obj, scan->line));
     
 }
