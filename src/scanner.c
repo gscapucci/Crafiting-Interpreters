@@ -1,4 +1,4 @@
-#include "scanner.h"
+#include "../include/scanner.h"
 
 Scanner create_scanner(const char *source) {
     Scanner scan = {0};
@@ -156,7 +156,7 @@ void number(Scanner *scan) {
     }
 
     Object obj = {0};
-    obj.type = NUMBER;
+    obj.type = ObjectTypeNum;
 
     uint64_t len = scan->current - scan->start;
     

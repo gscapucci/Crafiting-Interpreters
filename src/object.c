@@ -1,4 +1,4 @@
-#include "object.h"
+#include "../include/object.h"
 
 char *object_to_str(Object obj) {
     char *str = malloc(256 * sizeof(char));

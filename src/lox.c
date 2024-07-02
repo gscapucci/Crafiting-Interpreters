@@ -1,4 +1,4 @@
-#include "lox.h"
+#include "../include/lox.h"
 
 
 char *file_to_str(const char *path) {

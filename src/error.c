@@ -1,4 +1,4 @@
-#include "error.h"
+#include "../include/error.h"
 
 void error(int line, const char *message) {
     report(line, "", message);

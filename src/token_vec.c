@@ -1,4 +1,4 @@
-#include "token_vec.h"
+#include "../include/token_vec.h"
 
 TokenVec create_token_vec(uint64_t start_cap) {
     TokenVec tv;

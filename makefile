@@ -1,13 +1,21 @@
-INPUTFILES=main.c lox.c token.c error.c scanner.c object.c token_type.c token_vec.c
-ALLFILES= $(INPUTFILES) lox.h error.h lox.h scanner.h token_type.h token.h object.h token_vec.h token.h
+INPUTFILES=src/main.c src/lox.c src/token.c src/error.c src/scanner.c src/object.c src/token_type.c src/token_vec.c
+HEADER_FILES=include/lox.h include/error.h include/lox.h include/scanner.h include/token_type.h include/token.h include/object.h include/token_vec.h include/token.h
+
+ALLFILES= $(INPUTFILES) $(HEADER_FILES)
 FLAGS=-Wall -Wextra -Wpedantic
-LINK=-lm
-OUTPUT=lox
+LINK=
+OUTPUT=bin/lox
 
 
-lox: $(ALLFILES) 
-	gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK)
-	gcc -g $(INPUTFILES) $(LINK)
+lox: $(ALLFILES)
+	if [ -d "bin/" ]; then\
+		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
+		gcc -g $(INPUTFILES) $(LINK) -o bin/a.out;\
+	else\
+		mkdir bin;\
+		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
+		gcc -g $(INPUTFILES) $(LINK) -o bin/a.out;\
+	fi
 
 
 memcheck:

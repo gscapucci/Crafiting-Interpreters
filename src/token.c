@@ -1,4 +1,4 @@
-#include "token.h"
+#include "../include/token.h"
 
 Token* new_token(enum TokenType type, const char *lexeme, Object literal, int line) {
     Token *tk = malloc(sizeof(Token));
@@ -34,7 +34,7 @@ void delete_token(Token tk) {
 char *token_to_str(const Token *token) {
     char *str = malloc(1024 * sizeof(char));
     memset(str, 0, 1024);
-    sprintf(str, "%s('%s') ", token_type_to_str[token->type], token->lexeme);
+    sprintf(str, "%s(\"%s\") ", token_type_to_str[token->type], token->lexeme);
     char *aux = object_to_str(token->literal);
     strcat(str, aux);
     free(aux);
