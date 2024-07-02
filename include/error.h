@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "lox.h"
 
-void error(int line, const char *message);
-void report(int line, const char *where, const char *message);
+void error(uint64_t line, const char *message);
+void report(uint64_t line, const char *where, const char *message);
 
 #endif /* ERROR_H */

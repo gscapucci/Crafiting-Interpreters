@@ -12,6 +12,8 @@ Scanner create_scanner(const char *source) {
     strcpy(scan.source, source);
     scan.source[strlen_source] = 0;
 
+    
+
     return scan;
 }
 

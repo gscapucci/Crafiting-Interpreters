@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 typedef struct Token Token;
 
@@ -14,13 +15,13 @@ struct Token {
     enum TokenType type;
     char lexeme[256];
     Object literal;
-    int line;
+    uint64_t line;
 };
 
-Token* new_token(enum TokenType type, const char *lexeme, Object literal, int line);
+Token* new_token(enum TokenType type, const char *lexeme, Object literal, uint64_t line);
 void free_token(Token *tk);
 
-Token create_token(enum TokenType type, const char *lexeme, Object literal, int line);
+Token create_token(enum TokenType type, const char *lexeme, Object literal, uint64_t line);
 void delete_token(Token tk);
 
 char *token_to_str(const Token *token);

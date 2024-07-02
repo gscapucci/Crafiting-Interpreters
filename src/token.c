@@ -1,6 +1,6 @@
 #include "../include/token.h"
 
-Token* new_token(enum TokenType type, const char *lexeme, Object literal, int line) {
+Token* new_token(enum TokenType type, const char *lexeme, Object literal, uint64_t line) {
     Token *tk = malloc(sizeof(Token));
     if(!tk) return NULL;
     *tk = create_token(type, lexeme, literal, line);
@@ -12,7 +12,7 @@ void free_token(Token *tk) {
     tk = NULL;
 }
 
-Token create_token(enum TokenType type, const char *lexeme, Object literal, int line) {
+Token create_token(enum TokenType type, const char *lexeme, Object literal, uint64_t line) {
     Token tk;
     if(strlen(lexeme) > 255) {
         fprintf(stderr, "Token exeme is too large");
