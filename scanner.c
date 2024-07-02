@@ -82,7 +82,13 @@ void scan_token(Scanner *scan) {
             string(scan);
             break;
         default:
-            error(scan->line, "Unexpected character.");
+            if(is_digit(c)) {
+                number(scan);
+            } else if (is_alpha(c)) {
+                identifier(scan);
+            } else {
+                error(scan->line, "Unexpected character.");
+            }
             break;
     }
 }
@@ -139,4 +145,61 @@ void string(Scanner *scan) {
 
     token_vec_push(&scan->tokens, create_token(STRING, obj.string, obj, scan->line));
     
+}
+
+void number(Scanner *scan) {
+    while(is_digit(peek(scan))) advance(scan);
+
+    if(peek(scan) == '.' && is_digit(peek_next(scan))) {
+        advance(scan);
+        while(is_digit(peek(scan))) advance(scan);
+    }
+
+    Object obj = {0};
+    obj.type = NUMBER;
+
+    uint64_t len = scan->current - scan->start;
+    
+    char *sub_str = malloc(len + 1);
+    memcpy(sub_str, scan->source + scan->start, len);
+    sub_str[len] = '\0';
+
+    obj.num = strtod(sub_str, NULL);
+
+    token_vec_push(&scan->tokens, create_token(NUMBER, sub_str, obj, scan->line));
+
+    free(sub_str);
+}
+
+char peek_next(Scanner *scan) {
+    if(scan->current + 1 >= strlen(scan->source)) return '\0';
+    return scan->source[scan->current + 1];
+}
+
+void identifier(Scanner *scan) {
+    while(is_alphanumeric(peek(scan))) advance(scan);
+
+    Object obj = {0};
+    obj.type = ObjectNone;
+
+    uint64_t len = scan->current - scan->start;
+    char *sub_str = malloc(len + 1);
+    memcpy(sub_str, scan->source + scan->start, len);
+    sub_str[len] = '\0';
+
+    token_vec_push(&scan->tokens, create_token(IDENTIFIER, sub_str, obj, scan->line));
+    free(sub_str);
+}
+
+bool is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+bool is_alpha(char c) {
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+            c == '_';
+}
+bool is_alphanumeric(char c) {
+    return is_alpha(c) || is_digit(c);
 }

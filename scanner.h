@@ -26,4 +26,10 @@ void add_token_obj(Scanner *scan, enum TokenType type, Object literal);
 bool match(Scanner *scan, char expected);
 char peek(Scanner *scan);
 void string(Scanner *scan);
+void number(Scanner *scan);
+char peek_next(Scanner *scan);
+void identifier(Scanner *scan);
+bool is_digit(char c);
+bool is_alpha(char c);
+bool is_alphanumeric(char c);
 #endif /* SCANNER_H */
