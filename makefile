@@ -1,5 +1,5 @@
 INPUTFILES=src/main.c src/lox.c src/token.c src/error.c src/scanner.c src/object.c src/token_type.c src/token_vec.c src/hashmap.c
-HEADER_FILES=include/lox.h include/error.h include/lox.h include/scanner.h include/token_type.h include/token.h include/object.h include/token_vec.h include/token.h include/hashmap.h
+HEADER_FILES=include/lox.h include/error.h include/lox.h include/scanner.h include/token_type.h include/token.h include/object.h include/token_vec.h include/token.h include/hashmap.h include/expr.h
 
 ALLFILES= $(INPUTFILES) $(HEADER_FILES)
 FLAGS=-Wall -Wextra -Wpedantic

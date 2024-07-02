@@ -8,6 +8,7 @@
 #include <stdbool.h>
 
 #include "scanner.h"
+#include "expr.h"
 
 typedef struct Lox Lox;
 
