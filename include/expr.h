@@ -2,6 +2,7 @@
 #define EXPR_H
 
 #include "token.h"
+#include "lox.h"
 
 typedef struct Expr Expr;
 
@@ -46,7 +47,11 @@ struct Expr {
     };
 };
 
-
+Expr visit(Expr *expr);
+Expr visit_binary_expr(Expr *expr);
+Expr visit_binary_grouping(Expr *expr);
+Expr visit_binary_literal(Expr *expr);
+Expr visit_binary_unary(Expr *expr);
 
 
 #endif /* EXPR_H */
