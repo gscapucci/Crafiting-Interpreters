@@ -19,7 +19,7 @@ char *file_to_str(const char *path) {
 
 void lox_main(int argc, char **argv) {
     
-    Lox lox = (Lox) {
+    lox = (Lox) {
         .argc = argc,
         .argv = argv,
         .file = NULL,
