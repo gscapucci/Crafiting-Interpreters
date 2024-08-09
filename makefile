@@ -1,24 +1,19 @@
-INPUTFILES=src/main.c src/lox.c src/token.c src/error.c src/scanner.c src/object.c src/token_type.c src/token_vec.c src/hashmap.c
-HEADER_FILES=include/lox.h include/error.h include/lox.h include/scanner.h include/token_type.h include/token.h include/object.h include/token_vec.h include/token.h include/hashmap.h include/expr.h
+HEADER_FILES=macro.h lox.h error.h macro.h scanner.h token_type.h token_vec.h token.h hashmap.h expr.h parser.h astprinter.h
+SOURCE_FILES=main.c lox.c error.c scanner.c token_vec.c token.c token_type.c hashmap.c expr.c parser.c astprinter.c
+FILES=$(SOURCE_FILES) $(HEADER_FILES)
+CC=gcc
+FLAGS=-Wall -Wextra
+LINK=-lm
+OUTPUT=clox
 
-ALLFILES= $(INPUTFILES) $(HEADER_FILES)
-FLAGS=-Wall -Wextra -Wpedantic
-LINK=
-OUTPUT=bin/lox
-OUTPUT_DBG=bin/a.out
+LOX_INPUT=input.lox
+VALGRIND=valgrind
+VALGRIND_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
+A_OUT=a.out
 
+main: $(FILES)
+	$(CC) $(FLAGS) $(SOURCE_FILES) -o $(OUTPUT) $(LINK)
 
-lox: $(ALLFILES)
-	if [ -d "bin/" ]; then\
-		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
-		gcc -g $(INPUTFILES) $(LINK) -o $(OUTPUT_DBG);\
-	else\
-		mkdir bin;\
-		gcc $(FLAGS) $(INPUTFILES) -o $(OUTPUT) $(LINK);\
-		gcc -g $(INPUTFILES) $(LINK) -o $(OUTPUT_DBG);\
-	fi
-
-
-memcheck:
-	make
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./$(OUTPUT_DBG)
+memcheck: $(FILES)
+	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)
+	$(VALGRIND) $(VALGRIND_FLAGS) ./$(A_OUT) $(LOX_INPUT)
