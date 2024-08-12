@@ -17,7 +17,7 @@ struct Scanner {
 };
 
 //source is moved into the scanner, the sacnner will not free this memory
-Scanner create_scanner(Lox *lox, const char *source);
+Scanner create_scanner(const char *source);
 TokenVec scan_tokens(Lox *lox, Scanner *scan);
 void delete_scanner(Scanner *scan);
 

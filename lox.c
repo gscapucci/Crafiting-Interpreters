@@ -56,14 +56,16 @@ int run_prompt(Lox *lox) {
 
 
 int run(Lox *lox, char *source) {
-    Scanner scan = create_scanner(lox, source);
+    Scanner scan = create_scanner(source);
     TokenVec tk_vec = scan_tokens(lox, &scan);
     Parser parser = create_parser(lox, tk_vec);
     Expr *expr = parse(&parser);
-    char *str = print(*expr);
-    printf("%s\n", str);fflush(stdout);
-    free(str);
-    free_expr_tree(expr);
+    if(expr != NULL) {
+        char *str = print(*expr);
+        printf("%s\n", str);fflush(stdout);
+        free(str);
+        free_expr_tree(expr);
+    }
     delete_scanner(&scan);
     delete_token_vec(&tk_vec);
     return 0;
@@ -78,7 +80,10 @@ char *read_file(const char *path) {
 
     char *file_str = (char *)malloc(size + 1);
     memset(file_str, 0, size + 1);
-    fread(file_str, size, 1, file);
+    uint64_t ret = fread(file_str, size, 1, file);
+    if(ret == 0) {
+        exit(1);
+    }
     fclose(file);
     return file_str;
 }

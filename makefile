@@ -12,7 +12,7 @@ VALGRIND_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --ver
 A_OUT=a.out
 
 main: $(FILES)
-	$(CC) $(FLAGS) $(SOURCE_FILES) -o $(OUTPUT) $(LINK)
+	$(CC) $(FLAGS) -O3 $(SOURCE_FILES) -o $(OUTPUT) $(LINK)
 
 memcheck: $(FILES)
 	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)

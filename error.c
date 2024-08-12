@@ -28,6 +28,7 @@ char *error_as_str(Lox *lox, int line, const char *message) {
 char *report_as_str(Lox *lox, int line, const char *where, const char *message) {
     char *ret = calloc(strlen(where) + strlen(message) + 150, 1);
     sprintf(ret, "[Line %d] Error %s: %s", line, where, message);
+    lox->hadError = true;
     return ret;
 }
 

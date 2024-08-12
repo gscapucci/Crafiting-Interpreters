@@ -2,7 +2,7 @@
 #include "error.h"
 #include "hashmap.h"
 
-Scanner create_scanner(Lox *lox, const char *source) {
+Scanner create_scanner(const char *source) {
     Scanner scan;
     scan.start = 0;
     scan.current = 0;
