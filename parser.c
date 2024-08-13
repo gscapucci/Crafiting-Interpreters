@@ -9,7 +9,7 @@ struct ParseError {
     char *msg;
 } parse_error_obj;
 
-void parse_error(Token token, const char *message);
+void throw_parse_error(Token token, const char *message);
 
 Parser create_parser(Lox *l, TokenVec vec) {
     Parser parser;
@@ -117,17 +117,17 @@ Expr *primary(Parser *parser) {
         free(expr);
         return memcpy(malloc(sizeof(Expr)), &group, sizeof(Expr));
     }
-    parse_error(parser_peek(parser), "Unreachable");
+    throw_parse_error(parser_peek(parser), "Unreachable");
     return NULL;
 }
 
 Token consume(Parser *parser, enum TokenType type, const char *message) {
     if(check(parser, type)) return parser_advance(parser);
-    parse_error(parser_peek(parser), message);
+    throw_parse_error(parser_peek(parser), message);
     exit(1); //unreachable
 }
 
-void parse_error(Token token, const char *message) {
+void throw_parse_error(Token token, const char *message) {
     parse_error_obj.msg = error_token_as_str(lox, token, message);
     longjmp(parse_error_obj.buff, 1);
 }

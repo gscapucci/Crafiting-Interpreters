@@ -5,12 +5,16 @@
 #include "token_vec.h"  
 #include "parser.h"
 #include "astprinter.h"
+#include "interpreter.h"
+
+
 
 Lox *new_lox(int argc, char **argv) {
     Lox *lox = (Lox *)malloc(sizeof(Lox));
     lox->argc = argc;
     lox->argv = argv;
-    lox->hadError = false;
+    lox->had_error = false;
+    lox->had_runtime_error = false;
     return lox;
 }
 
@@ -35,8 +39,11 @@ int run_file(Lox *lox) {
     char *file = read_file(lox->argv[1]);
     if(!file) return 1;
     run(lox, file);
-    if(lox->hadError) {
+    if(lox->had_error) {
         exit(65);
+    }
+    if(lox->had_runtime_error) {
+        exit(70);
     }
     free(file);
     return 0;
@@ -59,13 +66,23 @@ int run(Lox *lox, char *source) {
     Scanner scan = create_scanner(source);
     TokenVec tk_vec = scan_tokens(lox, &scan);
     Parser parser = create_parser(lox, tk_vec);
+    Interpreter interpreter = create_interpreter(lox);
+
+
+
     Expr *expr = parse(&parser);
-    if(expr != NULL) {
-        char *str = print(*expr);
-        printf("%s\n", str);fflush(stdout);
-        free(str);
-        free_expr_tree(expr);
+    // if(expr != NULL) {
+    //     char *str = print(*expr);
+    //     printf("%s\n", str);fflush(stdout);
+    //     free(str);
+    //     free_expr_tree(expr);
+    // }
+    if(expr == NULL) {
+        lox->had_error = true;
+        return -1;
     }
+    interpret(&interpreter, *expr);
+    free_expr_tree(expr);
     delete_scanner(&scan);
     delete_token_vec(&tk_vec);
     return 0;

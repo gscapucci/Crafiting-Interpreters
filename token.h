@@ -55,6 +55,7 @@ Object *new_object_from_bool(const bool b);
 
 //remember to free this memory
 char *object_to_string(const Object *object);
+int object_compare(const Object left, const Object right);
 
 void delete_object(Object *object);
 void free_object(Object *object);
@@ -66,5 +67,9 @@ void delete_token(Token *token);
 
 //remember to free this memory
 char *token_to_string(const Token *token);
+
+Object object_minus(Object left, Object right);
+Object object_divide(Object left, Object right);
+Object object_multiply(Object left, Object right);
 
 #endif /* TOKEN_H */

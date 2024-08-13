@@ -7,30 +7,30 @@ char *print(Expr expr) {
 char *ast_accept(Expr expr) {
     switch(expr.type) {
         case ExprTypeBinary:
-            return visit_binary_expr(expr.binary);
+            return ast_visit_binary_expr(expr.binary);
         case ExprTypeGrouping:
-            return visit_grouping_expr(expr.grouping);
+            return ast_visit_grouping_expr(expr.grouping);
         case ExprTypeLiteral:
-            return visit_literal_expr(expr.literal);
+            return ast_visit_literal_expr(expr.literal);
         case ExprTypeUnary:
-            return visit_unary_expr(expr.unary);
+            return ast_visit_unary_expr(expr.unary);
     }
     return NULL;
 }
 
 
-char *visit_binary_expr(ExprBinary expr) {
+char *ast_visit_binary_expr(ExprBinary expr) {
     Expr exprs[] = {*expr.left, *expr.right};
     return parenthesize(expr.operator.lexeme, 2, exprs);
 }
-char *visit_grouping_expr(ExprGrouping expr) {
+char *ast_visit_grouping_expr(ExprGrouping expr) {
     return parenthesize("group", 1, expr.expression);
 }
-char *visit_literal_expr(ExprLiteral expr) {
+char *ast_visit_literal_expr(ExprLiteral expr) {
     if(expr.value.object_type == OBJ_TYPE_NULL) return memcpy(malloc(4), "nil", 4);
     return object_to_string(&expr.value);
 }
-char *visit_unary_expr(ExprUnary expr) {
+char *ast_visit_unary_expr(ExprUnary expr) {
     return parenthesize(expr.operator.lexeme, 1, expr.right);
 }
 

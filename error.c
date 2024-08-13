@@ -15,10 +15,15 @@ void error_token(Lox *lox, Token token, const char *message) {
 void error(Lox *lox, int line, const char *message) {
     report(lox, line, "", message);
 }
+
+void runtime_error(Lox *lox, int line, const char *message) {
+    printf("%s [Line %d]\n", message, line);
+    lox->had_runtime_error = true;
+}
 void report(Lox *lox, int line, const char *where, const char *message) {
     printf("[Line %d] Error %s: %s\n", line, where, message);
     fflush(stdout);
-    lox->hadError = true;
+    lox->had_error = true;
 }
 
 char *error_as_str(Lox *lox, int line, const char *message) {
@@ -28,7 +33,7 @@ char *error_as_str(Lox *lox, int line, const char *message) {
 char *report_as_str(Lox *lox, int line, const char *where, const char *message) {
     char *ret = calloc(strlen(where) + strlen(message) + 150, 1);
     sprintf(ret, "[Line %d] Error %s: %s", line, where, message);
-    lox->hadError = true;
+    lox->had_error = true;
     return ret;
 }
 

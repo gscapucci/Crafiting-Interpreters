@@ -7,12 +7,14 @@
 #include <string.h>
 #include <stdbool.h>
 
+
 typedef struct Lox Lox;
 
 struct Lox {
     int argc;
     char **argv;
-    bool hadError;
+    bool had_error;
+    bool had_runtime_error;
 };
 
 Lox *new_lox(int argc, char **argv);
