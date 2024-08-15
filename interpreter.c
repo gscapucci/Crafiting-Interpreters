@@ -29,7 +29,6 @@ Interpreter create_interpreter(Lox *l) {
 void interpret(Interpreter *interpreter, Expr expr) {
     if(setjmp(runtime_error_obj.buff) == 1) {
         runtime_error(lox, runtime_error_obj.operator.line, runtime_error_obj.msg);
-        fprintf(stderr, "%s\n", runtime_error_obj.msg);
         free(runtime_error_obj.msg);
         return;
     }
@@ -148,7 +147,7 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
             throw_runtime_error(expr.operator, "Operands must be integers, floats or strings.");
             break;
         case BANG_EQUAL:
-            if(left.object_type != right.object_type) break;
+            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.");
             Object obj1 = create_object_from_bool(!is_equal(left, right));
             if(left.object_type == OBJ_TYPE_STRING) {
                 free(left.value.str);
@@ -156,7 +155,7 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
             }
             return obj1;
         case EQUAL_EQUAL:
-            if(left.object_type != right.object_type) break;
+            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.");
             Object obj2 = create_object_from_bool(is_equal(left, right));
             if(left.object_type == OBJ_TYPE_STRING) {
                 free(left.value.str);
@@ -212,7 +211,7 @@ void check_number_operand(Token operator, Object operand) {
 void check_number_operands(Token operator, Object left, Object right) {
     if(left.object_type == OBJ_TYPE_FLOAT && right.object_type == OBJ_TYPE_FLOAT) return;
     if(left.object_type == OBJ_TYPE_INT && right.object_type == OBJ_TYPE_INT) return;
-    throw_runtime_error(operator, "Both Ooperands must be integers or floats.");
+    throw_runtime_error(operator, "Both Operands must be integers or floats.");
 }
 
 char *stringfy(Object obj) {
