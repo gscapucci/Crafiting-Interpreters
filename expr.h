@@ -55,4 +55,7 @@ Expr create_literal_expr(Object value);
 // The values insided the argumnets are moved, not copied
 Expr create_unary_expr(Token operator, Expr right);
 
+void delete_expr_tree(Expr *expr);
+void free_expr_tree(Expr *expr);
+
 #endif /* EXPR_H */

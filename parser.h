@@ -5,6 +5,7 @@
 #include "token.h"
 #include "expr.h"
 #include "lox.h"
+#include "stmt_vec.h"
 
 typedef struct Parser Parser;
 //Parser don't need delete function, the Parser don't own any memory
@@ -15,7 +16,10 @@ struct Parser {
 
 // move the values inside vec
 Parser create_parser(Lox *lox, TokenVec vec);
-Expr *parse(Parser *parser);
+StmtVec parse(Parser *parser);
+Stmt statement(Parser *parser);
+Stmt print_statement(Parser *parser);
+Stmt expression_statement(Parser *parser);
 Expr *expression(Parser *parser);
 Expr *equality(Parser *parser);
 bool parser_match(Parser *parser, uint64_t count, const enum TokenType *types);
@@ -30,7 +34,7 @@ Expr *factor(Parser *parser);
 Expr *unary(Parser *parser);
 Expr *primary(Parser *parser);
 Token consume(Parser *parser, enum TokenType type, const char *message);
-void free_expr_tree(Expr *expr);
+
 
 
 #endif /* PARSER_H */

@@ -163,7 +163,9 @@ void string(Lox *lox, Scanner *scan) {
 
     char *value = calloc((scan->current - 1) - (scan->start + 1) + 1, 1);
     memcpy(value, &scan->source[scan->start + 1], (scan->current - 1) - (scan->start + 1));
-    add_token_obj(scan, STRING, create_object_from_str(value));
+    Object obj = create_object_from_str(value);
+    add_token_obj(scan, STRING, obj);
+    delete_object(&obj);
     free(value);
 }
 

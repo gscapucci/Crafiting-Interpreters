@@ -39,7 +39,7 @@ struct Token {
     int line;
 };
 
-#define OBJECT_NONE() (Object){.object_type = OBJ_TYPE_NONE, .value = {0}}
+#define OBJECT_NONE() (Object){0}
 #define NEW_OBJECT_NONE() (Object*)calloc(sizeof(Object), 1)
 #define NEW_OBJECT_NIL() (Object*)calloc(sizeof(Object), 1)
 

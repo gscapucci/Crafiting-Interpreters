@@ -20,43 +20,39 @@ void throw_runtime_error(Token operator, const char *msg) {
     exit(1); // unreachable
 }
 
+
 Interpreter create_interpreter(Lox *l) {
     Interpreter i;
     lox = l;
     return i;
 }
 
-void interpret(Interpreter *interpreter, Expr expr) {
+void interpret(Interpreter *interpreter, StmtVec statements) {
     if(setjmp(runtime_error_obj.buff) == 1) {
         runtime_error(lox, runtime_error_obj.operator.line, runtime_error_obj.msg);
         free(runtime_error_obj.msg);
         return;
     }
-
-    Object value = evaluate(interpreter, expr);
-    char *text = stringfy(value);
-    if(text != NULL) {
-        printf("%s", text);
-        free(text);
+    for(uint64_t i = 0; i < statements.size; i++) {
+        execute(interpreter, statements.stmts[i]);
     }
-    delete_object(&value);
 }
 
-Object interpreter_accept(Interpreter *interpreter, Expr expr) {
-    switch (expr.type)
-    {
-    case ExprTypeBinary:
-        return interpreter_visit_binary_expr(interpreter, expr.binary);
-    case ExprTypeGrouping:
-        return interpreter_visit_grouping_expr(interpreter, expr.grouping);
-    case ExprTypeLiteral:
-        return interpreter_visit_literal_expr(expr.literal);
-    case ExprTypeUnary:
-        return interpreter_visit_unary_expr(interpreter, expr.unary);
+Object interpreter_accept_expr(Interpreter *interpreter, Expr expr) {
+    switch (expr.type) {
+        case ExprTypeBinary:
+            return interpreter_visit_binary_expr(interpreter, expr.binary);
+        case ExprTypeGrouping:
+            return interpreter_visit_grouping_expr(interpreter, expr.grouping);
+        case ExprTypeLiteral:
+            return interpreter_visit_literal_expr(expr.literal);
+        case ExprTypeUnary:
+            return interpreter_visit_unary_expr(interpreter, expr.unary);
+        default:
+            throw_runtime_error((Token){0}, "Unkown ExprType");
     }
-    fprintf(stderr, "Unreachable");
-    fflush(stdout);
-    exit(1);
+    throw_runtime_error((Token){0}, "Unreacheble");
+    return OBJECT_NONE();
 }
 
 Object interpreter_visit_literal_expr(ExprLiteral expr) {
@@ -170,8 +166,35 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
 }
 
 Object evaluate(Interpreter *interpreter, Expr expr) {
-    return interpreter_accept(interpreter, expr);
+    return interpreter_accept_expr(interpreter, expr);
 }
+
+void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt) {
+    switch(stmt.type) {
+        case StmtTypePrint:
+            interpreter_visit_print_stmt(interpreter, stmt.print);
+            break;
+        case StmtTypeExpression:
+            interpreter_visit_expression_stmt(interpreter, stmt.expression);
+            break;
+        default:
+            throw_runtime_error((Token){0}, "Unknown StmtType");
+    }
+}
+void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression stmt) {
+    evaluate(interpreter, stmt.expr);
+}
+void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt) {
+    Object obj = evaluate(interpreter, stmt.expr);
+    char *text = stringfy(obj);
+    printf("%s", text);
+    free(text);
+}
+
+void execute(Interpreter *interpreter, Stmt stmt) {
+    interpreter_accept_stmt(interpreter, stmt);
+}
+
 
 bool is_truthy(Object obj) {
     switch(obj.object_type) {

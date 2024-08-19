@@ -70,19 +70,19 @@ int run(Lox *lox, char *source) {
 
 
 
-    Expr *expr = parse(&parser);
+    StmtVec stmts = parse(&parser);
     // if(expr != NULL) {
     //     char *str = print(*expr);
     //     printf("%s\n", str);fflush(stdout);
     //     free(str);
     //     free_expr_tree(expr);
     // }
-    if(expr == NULL) {
+    if(stmts.size == 0) {
         lox->had_error = true;
         return -1;
     }
-    interpret(&interpreter, *expr);
-    free_expr_tree(expr);
+    interpret(&interpreter, stmts);
+    delete_stmt_vec(&stmts);
     delete_scanner(&scan);
     delete_token_vec(&tk_vec);
     return 0;

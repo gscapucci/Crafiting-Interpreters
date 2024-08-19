@@ -19,14 +19,41 @@ Parser create_parser(Lox *l, TokenVec vec) {
     return parser;
 }
 
-Expr *parse(Parser *parser) {
+StmtVec parse(Parser *parser) {
     if(setjmp(parse_error_obj.buff) == 1) {
         fprintf(stderr, "%s\n", parse_error_obj.msg);
         free(parse_error_obj.msg);
-        return NULL;
+        return (StmtVec){0};
     }
 
-    return expression(parser);
+    StmtVec statements = create_stmt_vec();
+    while(!parser_is_at_end(parser)) {
+        stmt_vec_push(&statements, statement(parser));
+    }
+    
+
+    return statements;
+}
+
+Stmt statement(Parser *parser) {
+    if(parser_match(parser, 1, &(enum TokenType){PRINT})) return print_statement(parser);
+    return expression_statement(parser);
+}
+
+Stmt expression_statement(Parser *parser) {
+    Expr *expr = expression(parser);
+    consume(parser, SEMICOLON, "Exprect ';' after expression.");
+    Stmt stmt = create_stmt_expression(*expr);
+    free(expr);
+    return stmt;
+}
+
+Stmt print_statement(Parser *parser) {
+    Expr *value = expression(parser);
+    consume(parser, SEMICOLON, "Expect ';' after value.");
+    Stmt stmt = create_stmt_print(*value);
+    free(value);
+    return stmt;
 }
 
 Expr *expression(Parser *parser) {
@@ -106,7 +133,7 @@ Expr *primary(Parser *parser) {
         return memcpy(malloc(sizeof(Expr)), &expr, sizeof(Expr));
     }
     enum TokenType aux[] = {FLOAT, INT, STRING};
-    if(parser_match(parser, 2, aux)) {
+    if(parser_match(parser, 3, aux)) {
         Expr expr = create_literal_expr(previous(parser).literal);
         return memcpy(malloc(sizeof(Expr)), &expr, sizeof(Expr));
     }
@@ -165,24 +192,3 @@ Token previous(Parser *parser) {
 }
 
 
-void free_expr_tree(Expr *expr) {
-    if(!expr) return;
-    switch(expr->type) {
-        case ExprTypeBinary:
-            free_expr_tree(expr->binary.left);
-            free_expr_tree(expr->binary.right);
-            break;
-        case ExprTypeGrouping:
-            free_expr_tree(expr->grouping.expression);
-            break;
-        case ExprTypeLiteral:
-            break;
-        case ExprTypeUnary:
-            free_expr_tree(expr->unary.right);
-            break;
-        default:
-            break;
-    }
-    free(expr);
-    return;
-}

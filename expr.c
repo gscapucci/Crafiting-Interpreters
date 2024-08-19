@@ -40,3 +40,45 @@ Expr create_unary_expr(Token operator, Expr right) {
     *expr.unary.right = right;
     return expr;
 }
+
+void delete_expr_tree(Expr *expr) {
+    if(!expr) return;
+    switch(expr->type) {
+        case ExprTypeBinary:
+            free_expr_tree(expr->binary.left);
+            free_expr_tree(expr->binary.right);
+            break;
+        case ExprTypeGrouping:
+            free_expr_tree(expr->grouping.expression);
+            break;
+        case ExprTypeLiteral:
+            break;
+        case ExprTypeUnary:
+            free_expr_tree(expr->unary.right);
+            break;
+        default:
+            break;
+    }
+}
+
+void free_expr_tree(Expr *expr) {
+    if(!expr) return;
+    switch(expr->type) {
+        case ExprTypeBinary:
+            free_expr_tree(expr->binary.left);
+            free_expr_tree(expr->binary.right);
+            break;
+        case ExprTypeGrouping:
+            free_expr_tree(expr->grouping.expression);
+            break;
+        case ExprTypeLiteral:
+            break;
+        case ExprTypeUnary:
+            free_expr_tree(expr->unary.right);
+            break;
+        default:
+            break;
+    }
+    free(expr);
+    return;
+}
