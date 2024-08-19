@@ -50,7 +50,7 @@ Object interpreter_accept(Interpreter *interpreter, Expr expr) {
     case ExprTypeGrouping:
         return interpreter_visit_grouping_expr(interpreter, expr.grouping);
     case ExprTypeLiteral:
-        return interpreter_visit_literal_expr(interpreter, expr.literal);
+        return interpreter_visit_literal_expr(expr.literal);
     case ExprTypeUnary:
         return interpreter_visit_unary_expr(interpreter, expr.unary);
     }
@@ -59,7 +59,7 @@ Object interpreter_accept(Interpreter *interpreter, Expr expr) {
     exit(1);
 }
 
-Object interpreter_visit_literal_expr(Interpreter *interpreter, ExprLiteral expr) {
+Object interpreter_visit_literal_expr(ExprLiteral expr) {
     return expr.value;
 }
 Object interpreter_visit_grouping_expr(Interpreter *interpreter, ExprGrouping expr) {

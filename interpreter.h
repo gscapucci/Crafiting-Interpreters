@@ -11,7 +11,7 @@ Interpreter create_interpreter(Lox *lox);
 void interpret(Interpreter *interpreter, Expr expr);
 
 Object interpreter_accept(Interpreter *interpreter, Expr expr);
-Object interpreter_visit_literal_expr(Interpreter *interpreter, ExprLiteral expr);
+Object interpreter_visit_literal_expr(ExprLiteral expr);
 Object interpreter_visit_grouping_expr(Interpreter *interpreter, ExprGrouping expr);
 Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr);
 Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr);
