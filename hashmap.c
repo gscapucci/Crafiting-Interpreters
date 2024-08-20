@@ -1,5 +1,6 @@
 #include "hashmap.h"
 #include "macro.h"
+#include "object.h"
 
 HashMap create_hashmap( uint64_t cap,
                         uint64_t (*hash_function)(void *data),
@@ -131,6 +132,16 @@ HashMapItem* new_hashmap_item(HashMap *hashmap, void *key, void *value) {
     return item;
 }
 
+bool hashmap_contains_key(HashMap *hashmap, void *key) {
+    uint64_t index = hashmap->hash(key) % hashmap->cap;
+    for(HashMapItem *curr = hashmap->items[index]; curr; curr = curr->next) {
+        if(hashmap->compare(key, curr->key) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int64_t compare_string(void *str1, void *str2) {
     return strcmp(str1, str2);
 }
@@ -145,9 +156,15 @@ uint64_t hash_string(void *data) {
     return hash_value;
 }
 
-void copy_string(void **dst, void *src) {
+void hashmap_copy_string(void **dst, void *src) {
     if(*dst == NULL) {
         *dst = calloc(strlen(src) + 1, 1);
     }
     strcpy(*dst, src);
+}
+void hashmap_copy_object(void **dst, void *src) {
+    if(*dst == NULL) {
+        *dst = calloc(sizeof(Object), 1);
+    }
+    **(Object **)dst = copy_object((Object *)src);
 }

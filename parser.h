@@ -18,8 +18,10 @@ struct Parser {
 Parser create_parser(Lox *lox, TokenVec vec);
 StmtVec parse(Parser *parser);
 Stmt statement(Parser *parser);
+Stmt declaration(Parser *parser);
 Stmt print_statement(Parser *parser);
 Stmt expression_statement(Parser *parser);
+Stmt var_declaration(Parser *parser);
 Expr *expression(Parser *parser);
 Expr *equality(Parser *parser);
 bool parser_match(Parser *parser, uint64_t count, const enum TokenType *types);
@@ -34,7 +36,6 @@ Expr *factor(Parser *parser);
 Expr *unary(Parser *parser);
 Expr *primary(Parser *parser);
 Token consume(Parser *parser, enum TokenType type, const char *message);
-
-
+void synchronize(Parser *parser);
 
 #endif /* PARSER_H */

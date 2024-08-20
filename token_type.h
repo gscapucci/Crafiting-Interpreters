@@ -32,5 +32,5 @@ char *token_type_to_string(enum TokenType tt);
 
 int64_t compare_tokentype(void *key1, void *key2);
 
-void copy_tokentype(void **dst, void *src);
+void hashmap_copy_tokentype(void **dst, void *src);
 #endif /* TOKEN_TYPE_H */

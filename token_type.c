@@ -95,7 +95,7 @@ int64_t compare_tokentype(void *key1, void *key2) {
     return *(enum TokenType*)key1 == *(enum TokenType*)key2 ? 0 : 1;
 }
 
-void copy_tokentype(void **dst, void *src) {
+void hashmap_copy_tokentype(void **dst, void *src) {
     if(*dst == NULL) {
         *dst = malloc(sizeof(enum TokenType));
     }

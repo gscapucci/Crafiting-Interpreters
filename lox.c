@@ -82,6 +82,7 @@ int run(Lox *lox, char *source) {
         return -1;
     }
     interpret(&interpreter, stmts);
+    delete_interpreter(&interpreter);
     delete_stmt_vec(&stmts);
     delete_scanner(&scan);
     delete_token_vec(&tk_vec);

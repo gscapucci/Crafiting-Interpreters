@@ -23,8 +23,14 @@ void throw_runtime_error(Token operator, const char *msg) {
 
 Interpreter create_interpreter(Lox *l) {
     Interpreter i;
+    i.env = create_environment();
     lox = l;
     return i;
+}
+
+void delete_interpreter(Interpreter *interpreter) {
+    if(!interpreter) return;
+    delete_environment(&interpreter->env);
 }
 
 void interpret(Interpreter *interpreter, StmtVec statements) {
@@ -48,6 +54,8 @@ Object interpreter_accept_expr(Interpreter *interpreter, Expr expr) {
             return interpreter_visit_literal_expr(expr.literal);
         case ExprTypeUnary:
             return interpreter_visit_unary_expr(interpreter, expr.unary);
+        case ExprTypeVariable:
+            return interpreter_visit_variable_expr(interpreter, expr.variable);
         default:
             throw_runtime_error((Token){0}, "Unkown ExprType");
     }
@@ -165,6 +173,10 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
     return OBJECT_NONE();
 }
 
+Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr) {
+    return environment_get(&interpreter->env, expr.name);
+}
+
 Object evaluate(Interpreter *interpreter, Expr expr) {
     return interpreter_accept_expr(interpreter, expr);
 }
@@ -176,6 +188,9 @@ void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt) {
             break;
         case StmtTypeExpression:
             interpreter_visit_expression_stmt(interpreter, stmt.expression);
+            break;
+        case StmtTypeVar:
+            interpreter_visit_var_stmt(interpreter, stmt.var);
             break;
         default:
             throw_runtime_error((Token){0}, "Unknown StmtType");
@@ -189,6 +204,14 @@ void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt) {
     char *text = stringfy(obj);
     printf("%s", text);
     free(text);
+}
+
+void interpreter_visit_var_stmt(Interpreter *interpreter, StmtVar stmt) {
+    Object value = OBJECT_NONE();
+    if(stmt.initializer.type != ExprTypeNULL) {
+        value = evaluate(interpreter, stmt.initializer);
+    }
+    environment_define(interpreter->env, stmt.name.lexeme, value);
 }
 
 void execute(Interpreter *interpreter, Stmt stmt) {

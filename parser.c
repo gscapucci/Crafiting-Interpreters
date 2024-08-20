@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "error.h"
+#include "macro.h"
 #include <setjmp.h>
 
 static Lox *lox = NULL;
@@ -8,6 +9,7 @@ struct ParseError {
     jmp_buf buff;
     char *msg;
 } parse_error_obj;
+
 
 void throw_parse_error(Token token, const char *message);
 
@@ -20,24 +22,29 @@ Parser create_parser(Lox *l, TokenVec vec) {
 }
 
 StmtVec parse(Parser *parser) {
-    if(setjmp(parse_error_obj.buff) == 1) {
-        fprintf(stderr, "%s\n", parse_error_obj.msg);
-        free(parse_error_obj.msg);
-        return (StmtVec){0};
-    }
-
     StmtVec statements = create_stmt_vec();
     while(!parser_is_at_end(parser)) {
-        stmt_vec_push(&statements, statement(parser));
+        stmt_vec_push(&statements, declaration(parser));
     }
-    
-
     return statements;
 }
 
 Stmt statement(Parser *parser) {
     if(parser_match(parser, 1, &(enum TokenType){PRINT})) return print_statement(parser);
     return expression_statement(parser);
+}
+
+Stmt declaration(Parser *parser) {
+    if(setjmp(parse_error_obj.buff) == 1) {
+        // fprintf(stderr, "%s\n", parse_error_obj.msg);
+        free(parse_error_obj.msg);
+        synchronize(parser);
+        return (Stmt){0};
+    }
+    if(parser_match(parser, 1, &(enum TokenType){VAR})) {
+        return var_declaration(parser);
+    }
+    return statement(parser);
 }
 
 Stmt expression_statement(Parser *parser) {
@@ -53,6 +60,18 @@ Stmt print_statement(Parser *parser) {
     consume(parser, SEMICOLON, "Expect ';' after value.");
     Stmt stmt = create_stmt_print(*value);
     free(value);
+    return stmt;
+}
+
+Stmt var_declaration(Parser *parser) {
+    Token name = consume(parser, IDENTIFIER, "Expect variable name.");
+    Expr *initializer = NULL;
+    if(parser_match(parser, 1, &(enum TokenType){EQUAL})) {
+        initializer = expression(parser);
+    }
+    consume(parser, SEMICOLON, "Expect ';' after variable declaration.");
+    Stmt stmt = create_stmt_var(name, *initializer);
+    if(initializer != NULL) free(initializer);
     return stmt;
 }
 
@@ -137,6 +156,10 @@ Expr *primary(Parser *parser) {
         Expr expr = create_literal_expr(previous(parser).literal);
         return memcpy(malloc(sizeof(Expr)), &expr, sizeof(Expr));
     }
+    if(parser_match(parser, 1, &(enum TokenType){IDENTIFIER})) {
+        Expr expr = create_variable_expr(previous(parser));
+        return memcpy(malloc(sizeof(Expr)), &expr, sizeof(expr));
+    }
     if(parser_match(parser, 1, &(enum TokenType){LEFT_PAREN})) {
         Expr *expr = expression(parser);
         consume(parser, RIGHT_PAREN, "Expect ')', after expression.");
@@ -191,4 +214,23 @@ Token previous(Parser *parser) {
     return parser->vec.tokens[parser->current - 1];
 }
 
-
+void synchronize(Parser *parser) {
+    parser_advance(parser);
+    while(!parser_is_at_end(parser)) {
+        if(previous(parser).type == SEMICOLON) return;
+        switch(parser_peek(parser).type) {
+            case CLASS:
+            case FUN:
+            case VAR:
+            case FOR:
+            case IF:
+            case WHILE:
+            case PRINT:
+            case RETURN:
+                return;
+            default:
+                break;
+        }
+        parser_advance(parser);
+    }
+}

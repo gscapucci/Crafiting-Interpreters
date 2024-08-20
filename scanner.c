@@ -9,7 +9,7 @@ Scanner create_scanner(const char *source) {
     scan.line = 1;
     scan.source = source;
     scan.vec = create_token_vec();
-    scan.keywords = create_hashmap(16, hash_string, malloc, free, compare_string, copy_tokentype, copy_string, FLAG_COPY_VALUE);
+    scan.keywords = create_hashmap(16, hash_string, malloc, free, compare_string, hashmap_copy_tokentype, hashmap_copy_string, FLAG_COPY_VALUE);
     hashmap_insert(&scan.keywords, "and", &(enum TokenType){AND});
     hashmap_insert(&scan.keywords, "class", &(enum TokenType){CLASS});
     hashmap_insert(&scan.keywords, "else", &(enum TokenType){ELSE});

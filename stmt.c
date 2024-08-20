@@ -15,6 +15,14 @@ Stmt create_stmt_expression(Expr expr) {
     return stmt;
 }
 
+Stmt create_stmt_var(Token name, Expr init) {
+    Stmt stmt;
+    stmt.type = StmtTypeVar;
+    stmt.var.name = name;
+    stmt.var.initializer = init;
+    return stmt;
+}
+
 void delete_stmt(Stmt *stmt) {
     if(!stmt)return;
     switch(stmt->type) {
@@ -23,6 +31,11 @@ void delete_stmt(Stmt *stmt) {
             break;
         case StmtTypePrint:
             delete_expr_tree(&stmt->print.expr);
+            break;
+        case StmtTypeVar:
+            delete_expr_tree(&stmt->var.initializer);
+            break;
+        case StmtNULL:
             break;
     }
 }

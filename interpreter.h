@@ -4,11 +4,15 @@
 #include "expr.h"
 #include "lox.h"
 #include "stmt_vec.h"
+#include "environment.h"
 typedef struct Interpreter Interpreter;
 
-struct Interpreter {};
+struct Interpreter {
+    Environment env;
+};
 
 Interpreter create_interpreter(Lox *lox);
+void delete_interpreter(Interpreter *interpreter);
 void interpret(Interpreter *interpreter, StmtVec stmts);
 
 Object interpreter_accept_expr(Interpreter *interpreter, Expr expr);
@@ -16,11 +20,13 @@ Object interpreter_visit_literal_expr(ExprLiteral expr);
 Object interpreter_visit_grouping_expr(Interpreter *interpreter, ExprGrouping expr);
 Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr);
 Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr);
+Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr);
 Object evaluate(Interpreter *interpreter, Expr expr);
 
 void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt);
 void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression stmt);
 void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt);
+void interpreter_visit_var_stmt(Interpreter *interpreter, StmtVar stmt);
 
 void execute(Interpreter *interpreter, Stmt stmt);
 

@@ -41,6 +41,13 @@ Expr create_unary_expr(Token operator, Expr right) {
     return expr;
 }
 
+Expr create_variable_expr(Token name) {
+    Expr expr;
+    expr.type = ExprTypeVariable;
+    expr.variable.name = name;
+    return expr;
+}
+
 void delete_expr_tree(Expr *expr) {
     if(!expr) return;
     switch(expr->type) {
@@ -56,7 +63,9 @@ void delete_expr_tree(Expr *expr) {
         case ExprTypeUnary:
             free_expr_tree(expr->unary.right);
             break;
-        default:
+        case ExprTypeVariable:
+            break;
+        case ExprTypeNULL:
             break;
     }
 }
@@ -76,7 +85,9 @@ void free_expr_tree(Expr *expr) {
         case ExprTypeUnary:
             free_expr_tree(expr->unary.right);
             break;
-        default:
+        case ExprTypeVariable:
+            break;
+        case ExprTypeNULL:
             break;
     }
     free(expr);

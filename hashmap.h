@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct HashMap HashMap;
 typedef struct HashMapItem HashMapItem;
@@ -50,12 +51,13 @@ void hashmap_insert(HashMap *hashmap, void *key, void *value);
 void hashmap_resize(HashMap *hashmap);
 void *hashmap_get(HashMap *hashmap, void *key);
 HashMapItem* new_hashmap_item(HashMap *hashmap, void *key, void *value);
-
+bool hashmap_contains_key(HashMap *hashmap, void *key);
 
 
 int64_t compare_string(void *str1, void *str2);
 uint64_t hash_string(void *data);
 
-void copy_string(void **dst, void *src);
+void hashmap_copy_string(void **dst, void *src);
+void hashmap_copy_object(void **dst, void *src);
 
 #endif /* HASMAP_H */
