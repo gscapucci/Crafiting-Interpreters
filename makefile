@@ -21,6 +21,10 @@ A_OUT=a.out
 main: $(FILES)
 	$(CC) $(FLAGS) -O3 $(SOURCE_FILES) -o $(OUTPUT) $(LINK)
 
-memcheck: $(FILES)
+memcheck: debug
 	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)
 	$(VALGRIND) $(VALGRIND_FLAGS) ./$(A_OUT) $(LOX_INPUT)
+
+debug: $(FILES)
+	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)
+

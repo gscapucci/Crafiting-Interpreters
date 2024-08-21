@@ -56,6 +56,8 @@ Object interpreter_accept_expr(Interpreter *interpreter, Expr expr) {
             return interpreter_visit_unary_expr(interpreter, expr.unary);
         case ExprTypeVariable:
             return interpreter_visit_variable_expr(interpreter, expr.variable);
+        case ExprTypeAssign:
+            return interpreter_visit_assign_expr(interpreter, expr.assign);
         default:
             throw_runtime_error((Token){0}, "Unkown ExprType");
     }
@@ -175,6 +177,12 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
 
 Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr) {
     return environment_get(&interpreter->env, expr.name);
+}
+
+Object interpreter_visit_assign_expr(Interpreter *interpreter, ExprAssign expr) {
+    Object value = evaluate(interpreter, *expr.value);
+    environment_assign(&interpreter->env, expr.name, value);
+    return value;
 }
 
 Object evaluate(Interpreter *interpreter, Expr expr) {

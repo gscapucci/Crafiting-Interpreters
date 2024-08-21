@@ -48,6 +48,15 @@ Expr create_variable_expr(Token name) {
     return expr;
 }
 
+Expr create_assign_expr(Token name, Expr value) {
+    Expr expr;
+    expr.type = ExprTypeAssign;
+    expr.assign.name = name;
+    expr.assign.value = malloc(sizeof(Expr));
+    *expr.assign.value = value;
+    return expr;
+}
+
 void delete_expr_tree(Expr *expr) {
     if(!expr) return;
     switch(expr->type) {
@@ -62,6 +71,9 @@ void delete_expr_tree(Expr *expr) {
             break;
         case ExprTypeUnary:
             free_expr_tree(expr->unary.right);
+            break;
+        case ExprTypeAssign:
+            free_expr_tree(expr->assign.value);
             break;
         case ExprTypeVariable:
             break;
@@ -84,6 +96,9 @@ void free_expr_tree(Expr *expr) {
             break;
         case ExprTypeUnary:
             free_expr_tree(expr->unary.right);
+            break;
+        case ExprTypeAssign:
+            free_expr_tree(expr->assign.value);
             break;
         case ExprTypeVariable:
             break;

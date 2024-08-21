@@ -76,7 +76,7 @@ Stmt var_declaration(Parser *parser) {
 }
 
 Expr *expression(Parser *parser) {
-    return equality(parser);
+    return assignment(parser);
 }
 
 Expr *equality(Parser *parser) {
@@ -169,6 +169,24 @@ Expr *primary(Parser *parser) {
     }
     throw_parse_error(parser_peek(parser), "Unreachable");
     return NULL;
+}
+
+Expr *assignment(Parser *parser) {
+    Expr *expr = equality(parser);
+    if(parser_match(parser, 1, &(enum TokenType){EQUAL})) {
+        Token equals = previous(parser);
+        Expr *value = assignment(parser);
+        if(expr->type == ExprTypeVariable) {
+            Token name = expr->variable.name;
+            Expr aux = create_assign_expr(name, *value);
+            free(expr);
+            free(value);
+            Expr *ret = memcpy(malloc(sizeof(Expr)), &aux, sizeof(Expr));
+            return ret;
+        }
+        error_token(lox, equals, "Invalid assignment target.");
+    }
+    return expr;
 }
 
 Token consume(Parser *parser, enum TokenType type, const char *message) {

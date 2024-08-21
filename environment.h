@@ -13,5 +13,6 @@ Environment create_environment();
 void delete_environment(Environment *env);
 void environment_define(Environment env, const char *name, Object value);
 Object environment_get(Environment *env, Token name);
+void environment_assign(Environment *env, Token name, Object value);
 
 #endif /* ENVIRONMENT_H */

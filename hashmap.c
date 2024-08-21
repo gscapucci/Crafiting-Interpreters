@@ -85,7 +85,7 @@ void hashmap_insert(HashMap *hashmap, void *key, void *value) {
         if(hashmap->compare(key, curr->key) == 0) {
             switch(hashmap->flag) {
                 case FLAG_COPY_VALUE:
-                    hashmap->copy_value(curr->value, value);
+                    hashmap->copy_value(&curr->value, value);
                     break;
                 case FLAG_MOVE_VALUE:
                     hashmap->free(curr->value);
@@ -164,7 +164,8 @@ void hashmap_copy_string(void **dst, void *src) {
 }
 void hashmap_copy_object(void **dst, void *src) {
     if(*dst == NULL) {
-        *dst = calloc(sizeof(Object), 1);
+        *dst = malloc(sizeof(Object));
     }
-    **(Object **)dst = copy_object((Object *)src);
+    Object *obj = *(Object **)dst;
+    *obj = copy_object((Object *)src);
 }

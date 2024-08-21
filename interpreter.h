@@ -21,6 +21,7 @@ Object interpreter_visit_grouping_expr(Interpreter *interpreter, ExprGrouping ex
 Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr);
 Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr);
 Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr);
+Object interpreter_visit_assign_expr(Interpreter *interpreter, ExprAssign expr);
 Object evaluate(Interpreter *interpreter, Expr expr);
 
 void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt);

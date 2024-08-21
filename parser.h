@@ -35,6 +35,7 @@ Expr *term(Parser *parser);
 Expr *factor(Parser *parser);
 Expr *unary(Parser *parser);
 Expr *primary(Parser *parser);
+Expr *assignment(Parser *parser);
 Token consume(Parser *parser, enum TokenType type, const char *message);
 void synchronize(Parser *parser);
 
