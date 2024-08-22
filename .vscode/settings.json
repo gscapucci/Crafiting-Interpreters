@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.h": "c",
-        "lox.h": "c",
-        "error.h": "c",
-        "compare": "c"
-    },
-    "C_Cpp.errorSquiggles": "enabled"
-}

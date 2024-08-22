@@ -27,7 +27,8 @@ struct HashMap {
     uint64_t size;
     uint64_t (*hash)(void *key);
     void * (*malloc)(uint64_t size);
-    void (*free)(void *ptr);
+    void (*free_key)(void *ptr);
+    void (*free_value)(void *ptr);
     int64_t (*compare)(void *key1, void *key2);
     void (*copy_value)(void **dst, void *src);
     void (*copy_key)(void **dst, void *src);
@@ -40,7 +41,8 @@ struct HashMap {
 HashMap create_hashmap( uint64_t cap,
                         uint64_t (*hash_function)(void *data),
                         void* (*your_alloc)(uint64_t size),
-                        void (*your_free)(void *ptr),
+                        void (*your_free_key)(void *ptr),
+                        void (*your_free_value)(void *ptr),
                         int64_t (*compare)(void *key1, void *key2),
                         void (*copy_value)(void **dst, void *src),
                         void (*copy_key)(void **dst, void *src),

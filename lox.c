@@ -61,6 +61,29 @@ int run_prompt(Lox *lox) {
     return ret;
 }
 
+// void println_stmt(const char *pad, Stmt stmt) {
+//     switch (stmt.type) {
+//         case StmtTypeBlock:
+//             printf("%s[\n", pad);
+//             for(uint64_t i = 0; i < stmt.block.statements.size; i++) {
+//                 char padd[100] = {0};
+//                 strcpy(padd, pad);
+//                 strcat(padd, "\t");
+//                 println_stmt(padd, stmt.block.statements.stmts[i]);
+//             }
+//             printf("%s]\n", pad);
+//             break;
+//         case StmtTypeExpression:
+//             printf("%sExpression\n", pad);
+//             break;
+//         case StmtTypePrint:
+//             printf("%sPrint\n", pad);
+//             break;
+//         case StmtTypeVar:
+//             printf("%sVar\n", pad);
+//             break;
+//     }
+// }
 
 int run(Lox *lox, char *source) {
     Scanner scan = create_scanner(source);
@@ -81,6 +104,9 @@ int run(Lox *lox, char *source) {
         lox->had_error = true;
         return -1;
     }
+    // for(uint64_t i = 0; i < stmts.size; i++) {
+    //     println_stmt("", stmts.stmts[i]);
+    // }
     interpret(&interpreter, stmts);
     delete_interpreter(&interpreter);
     delete_stmt_vec(&stmts);

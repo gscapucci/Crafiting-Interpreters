@@ -5,7 +5,8 @@
 HashMap create_hashmap( uint64_t cap,
                         uint64_t (*hash_function)(void *data),
                         void* (*your_alloc)(uint64_t size),
-                        void (*your_free)(void *ptr),
+                        void (*your_free_key)(void *ptr),
+                        void (*your_free_value)(void *ptr),
                         int64_t (*compare)(void *key1, void *key2),
                         void (*copy_value)(void **dst, void *src),
                         void (*copy_key)(void **dst, void *src),
@@ -18,7 +19,8 @@ HashMap create_hashmap( uint64_t cap,
     hashmap.size = 0;
     hashmap.hash = hash_function;
     hashmap.malloc = your_alloc;
-    hashmap.free = your_free;
+    hashmap.free_key = your_free_key;
+    hashmap.free_value = your_free_value;
     hashmap.compare = compare;
     hashmap.flag = flag;
     hashmap.items = calloc(cap, sizeof(HashMapItem *));
@@ -34,12 +36,12 @@ void delete_hashmap(HashMap *hashmap) {
         while(curr) {
             prev = curr;
             curr = curr->next;
-            hashmap->free(prev->key);
-            hashmap->free(prev->value);
-            hashmap->free(prev);
+            hashmap->free_key(prev->key);
+            hashmap->free_value(prev->value);
+            free(prev);
         }
     }
-    hashmap->free(hashmap->items);
+    free(hashmap->items);
 }
 
 void hashmap_remove(HashMap *mp, void *key) {
@@ -68,7 +70,7 @@ void hashmap_remove(HashMap *mp, void *key) {
             else {
                 prev->next = curr->next;
             }
-            mp->free(curr);
+            free(curr);
             break;
         }
         prev = curr;
@@ -88,7 +90,7 @@ void hashmap_insert(HashMap *hashmap, void *key, void *value) {
                     hashmap->copy_value(&curr->value, value);
                     break;
                 case FLAG_MOVE_VALUE:
-                    hashmap->free(curr->value);
+                    hashmap->free_value(curr->value);
                     curr->value = value;
                     break;
             }
@@ -100,6 +102,7 @@ void hashmap_insert(HashMap *hashmap, void *key, void *value) {
     } else {
         prev->next = new_hashmap_item(hashmap, key, value);
     }
+    hashmap->size++;
 }
 void hashmap_resize(HashMap *hashmap) {
     (void)hashmap;
@@ -143,7 +146,9 @@ bool hashmap_contains_key(HashMap *hashmap, void *key) {
 }
 
 int64_t compare_string(void *str1, void *str2) {
-    return strcmp(str1, str2);
+    char *str11 = str1;
+    char *str22 = str2;
+    return strcmp(str11, str22);
 }
 
 uint64_t hash_string(void *data) {

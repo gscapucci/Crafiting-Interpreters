@@ -31,6 +31,7 @@ StmtVec parse(Parser *parser) {
 
 Stmt statement(Parser *parser) {
     if(parser_match(parser, 1, &(enum TokenType){PRINT})) return print_statement(parser);
+    if(parser_match(parser, 1, &(enum TokenType){LEFT_BRACE})) return create_stmt_block(block(parser));
     return expression_statement(parser);
 }
 
@@ -73,6 +74,15 @@ Stmt var_declaration(Parser *parser) {
     Stmt stmt = create_stmt_var(name, *initializer);
     if(initializer != NULL) free(initializer);
     return stmt;
+}
+
+StmtVec block(Parser *parser) {
+    StmtVec statements = create_stmt_vec();
+    while(!check(parser, RIGHT_BRACE) && !parser_is_at_end(parser)) {
+        stmt_vec_push(&statements, declaration(parser));
+    }
+    consume(parser, RIGHT_BRACE, "Expect '}' after block");
+    return statements;
 }
 
 Expr *expression(Parser *parser) {

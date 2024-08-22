@@ -3,19 +3,25 @@
 #include "error.h"
 #include <setjmp.h>
 
-static Lox *lox = NULL;
 typedef struct RuntimeError RuntimeError;
+// typedef struct ExitBlock ExitBlock;
+
+static Lox *lox = NULL;
 struct RuntimeError {
     jmp_buf buff;
     Token operator;
     char *msg;
 } runtime_error_obj;
 
+// struct ExitBlock {
+//     jmp_buf buff;
+// } exit_block_obj;
 
-void throw_runtime_error(Token operator, const char *msg) {
+void throw_runtime_error(Token operator, char *msg, bool free_msg) {
     runtime_error_obj.msg = calloc(strlen(msg) + 1, 1);
     strcpy(runtime_error_obj.msg, msg);
     runtime_error_obj.operator = operator;
+    if(free_msg) free(msg);
     longjmp(runtime_error_obj.buff, 1);
     exit(1); // unreachable
 }
@@ -59,9 +65,9 @@ Object interpreter_accept_expr(Interpreter *interpreter, Expr expr) {
         case ExprTypeAssign:
             return interpreter_visit_assign_expr(interpreter, expr.assign);
         default:
-            throw_runtime_error((Token){0}, "Unkown ExprType");
+            throw_runtime_error((Token){0}, "Unkown ExprType", false);
     }
-    throw_runtime_error((Token){0}, "Unreacheble");
+    throw_runtime_error((Token){0}, "Unreacheble", false);
     return OBJECT_NONE();
 }
 
@@ -84,7 +90,7 @@ Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr) {
                     right.value.f_num *= -1.0;
                     return right;
                 default:
-                    throw_runtime_error(expr.operator, "Unreachable");
+                    throw_runtime_error(expr.operator, "Unreachable", false);
                     break;
             }
             break;
@@ -95,10 +101,10 @@ Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr) {
             }
             return obj;
         default:
-            throw_runtime_error(expr.operator, "Unreachable");
+            throw_runtime_error(expr.operator, "Unreachable", false);
             break;
     }
-    throw_runtime_error(expr.operator, "Unreachable");
+    throw_runtime_error(expr.operator, "Unreachable", false);
     return OBJECT_NONE();
 }
 
@@ -150,10 +156,10 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
                 free(right.value.str);
                 return obj;
             }
-            throw_runtime_error(expr.operator, "Operands must be integers, floats or strings.");
+            throw_runtime_error(expr.operator, "Operands must be integers, floats or strings.", false);
             break;
         case BANG_EQUAL:
-            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.");
+            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.", false);
             Object obj1 = create_object_from_bool(!is_equal(left, right));
             if(left.object_type == OBJ_TYPE_STRING) {
                 free(left.value.str);
@@ -161,7 +167,7 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
             }
             return obj1;
         case EQUAL_EQUAL:
-            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.");
+            if(left.object_type != right.object_type) throw_runtime_error(expr.operator, "Operators must be of the same type.", false);
             Object obj2 = create_object_from_bool(is_equal(left, right));
             if(left.object_type == OBJ_TYPE_STRING) {
                 free(left.value.str);
@@ -171,17 +177,30 @@ Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr) 
         default:
             break;
     }
-    throw_runtime_error(expr.operator, "Unreachable");
+    throw_runtime_error(expr.operator, "Unreachable", false);
     return OBJECT_NONE();
 }
 
 Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr) {
-    return environment_get(&interpreter->env, expr.name);
+    bool err = false;
+    Object obj = environment_get(&interpreter->env, expr.name, &err);
+    if(err) {
+        char *msg = calloc(200, 1);
+        sprintf(msg, "Undefined variable '%s'.", expr.name.lexeme);
+        throw_runtime_error((Token){0}, msg, true);
+    }
+    return obj;
 }
 
 Object interpreter_visit_assign_expr(Interpreter *interpreter, ExprAssign expr) {
     Object value = evaluate(interpreter, *expr.value);
-    environment_assign(&interpreter->env, expr.name, value);
+    bool err = false;
+    environment_assign(&interpreter->env, expr.name, value, &err);
+    if(err) {
+        char *msg = calloc(200, 1);
+        sprintf(msg, "Undefined variable '%s'", expr.name.lexeme);
+        throw_runtime_error((Token){0}, msg, true);
+    }
     return value;
 }
 
@@ -200,8 +219,11 @@ void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt) {
         case StmtTypeVar:
             interpreter_visit_var_stmt(interpreter, stmt.var);
             break;
+        case StmtTypeBlock:
+            interpreter_visit_block_stmt(interpreter, stmt.block);
+            break;
         default:
-            throw_runtime_error((Token){0}, "Unknown StmtType");
+            throw_runtime_error((Token){0}, "Unknown StmtType", false);
     }
 }
 void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression stmt) {
@@ -210,7 +232,7 @@ void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression 
 void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt) {
     Object obj = evaluate(interpreter, stmt.expr);
     char *text = stringfy(obj);
-    printf("%s", text);
+    printf("%s\n", text);
     free(text);
 }
 
@@ -220,6 +242,24 @@ void interpreter_visit_var_stmt(Interpreter *interpreter, StmtVar stmt) {
         value = evaluate(interpreter, stmt.initializer);
     }
     environment_define(interpreter->env, stmt.name.lexeme, value);
+}
+
+void interpreter_visit_block_stmt(Interpreter *interpreter, StmtBlock stmt) {
+    execute_block(interpreter, stmt.statements, create_environment_from_enclosing(interpreter->env));
+}
+
+void execute_block(Interpreter *interpreter, StmtVec statements, Environment env) {
+    Environment previous = interpreter->env;
+    RuntimeError aux = runtime_error_obj;
+    if(setjmp(runtime_error_obj.buff) != 1) {
+        interpreter->env = env;
+        for(uint64_t i = 0; i < statements.size; i++) {
+            execute(interpreter, statements.stmts[i]);
+        }
+    }
+    interpreter->env = previous;
+    runtime_error_obj = aux;
+    delete_environment(&env);
 }
 
 void execute(Interpreter *interpreter, Stmt stmt) {
@@ -255,17 +295,17 @@ void check_comparison_operator(Token operator, Object left, Object right) {
     if(left.object_type == OBJ_TYPE_FLOAT && right.object_type == OBJ_TYPE_FLOAT) return;
     if(left.object_type == OBJ_TYPE_INT && right.object_type == OBJ_TYPE_INT) return;
     if(left.object_type == OBJ_TYPE_STRING && right.object_type == OBJ_TYPE_STRING) return;
-    throw_runtime_error(operator, "Comparison operator error.");
+    throw_runtime_error(operator, "Comparison operator error.", false);
 }
 
 void check_number_operand(Token operator, Object operand) {
     if(operand.object_type == OBJ_TYPE_INT || operand.object_type == OBJ_TYPE_FLOAT) return;
-    throw_runtime_error(operator, "Operand must be a number");
+    throw_runtime_error(operator, "Operand must be a number", false);
 }
 void check_number_operands(Token operator, Object left, Object right) {
     if(left.object_type == OBJ_TYPE_FLOAT && right.object_type == OBJ_TYPE_FLOAT) return;
     if(left.object_type == OBJ_TYPE_INT && right.object_type == OBJ_TYPE_INT) return;
-    throw_runtime_error(operator, "Both Operands must be integers or floats.");
+    throw_runtime_error(operator, "Both Operands must be integers or floats.", false);
 }
 
 char *stringfy(Object obj) {

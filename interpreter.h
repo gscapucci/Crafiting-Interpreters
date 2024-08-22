@@ -3,7 +3,7 @@
 
 #include "expr.h"
 #include "lox.h"
-#include "stmt_vec.h"
+#include "stmt.h"
 #include "environment.h"
 typedef struct Interpreter Interpreter;
 
@@ -22,13 +22,16 @@ Object interpreter_visit_unary_expr(Interpreter *interpreter, ExprUnary expr);
 Object interpreter_visit_binary_expr(Interpreter *interpreter, ExprBinary expr);
 Object interpreter_visit_variable_expr(Interpreter *interpreter, ExprVariable expr);
 Object interpreter_visit_assign_expr(Interpreter *interpreter, ExprAssign expr);
+
 Object evaluate(Interpreter *interpreter, Expr expr);
 
 void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt);
 void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression stmt);
 void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt);
 void interpreter_visit_var_stmt(Interpreter *interpreter, StmtVar stmt);
+void interpreter_visit_block_stmt(Interpreter *interpreter, StmtBlock stmt);
 
+void execute_block(Interpreter *interpreter, StmtVec statements, Environment env);
 void execute(Interpreter *interpreter, Stmt stmt);
 
 bool is_truthy(Object obj);
