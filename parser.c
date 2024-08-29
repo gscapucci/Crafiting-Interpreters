@@ -30,6 +30,8 @@ StmtVec parse(Parser *parser) {
 }
 
 Stmt statement(Parser *parser) {
+    if(parser_match(parser, 1, &(enum TokenType){IF})) return if_statement(parser);
+    if(parser_match(parser, 1, &(enum TokenType){PRINTLN})) return println_statement(parser);
     if(parser_match(parser, 1, &(enum TokenType){PRINT})) return print_statement(parser);
     if(parser_match(parser, 1, &(enum TokenType){LEFT_BRACE})) return create_stmt_block(block(parser));
     return expression_statement(parser);
@@ -64,6 +66,22 @@ Stmt print_statement(Parser *parser) {
     return stmt;
 }
 
+Stmt println_statement(Parser *parser) {
+    Expr *value = expression(parser);
+    consume(parser, SEMICOLON, "Expect ';' after value");
+    StmtVec vec = create_stmt_vec_with_start_cap(2);
+    stmt_vec_push(&vec, create_stmt_print(*value));
+    stmt_vec_push(&vec, create_stmt_print((Expr){
+        .type = ExprTypeLiteral,
+        .literal = (ExprLiteral) {
+            .value = create_object_from_str("\n"),
+        }
+    }));
+    free(value);
+    Stmt stmt = create_stmt_block(vec);
+    return stmt;
+}
+
 Stmt var_declaration(Parser *parser) {
     Token name = consume(parser, IDENTIFIER, "Expect variable name.");
     Expr *initializer = NULL;
@@ -74,6 +92,32 @@ Stmt var_declaration(Parser *parser) {
     Stmt stmt = create_stmt_var(name, *initializer);
     if(initializer != NULL) free(initializer);
     return stmt;
+}
+
+Stmt if_statement(Parser *parser) {
+    consume(parser, LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr *condition = expression(parser);
+    consume(parser, RIGHT_PAREN, "Expect ')' after if condition.");
+    
+    Stmt stmt = statement(parser);
+    Stmt *thenBranch = malloc(sizeof(Stmt));
+    *thenBranch = stmt;
+    Stmt *elseBranch = NULL;
+    if(parser_match(parser, 1, &(enum TokenType){ELSE})) {
+        Stmt stmt = statement(parser);
+        elseBranch = malloc(sizeof(Stmt));
+        *elseBranch = stmt;
+    }
+    Stmt ret = (Stmt){
+        .type = StmtTypeIf,
+        .iff = (StmtIf) {
+            .condition = *condition,
+            .thenBranch = thenBranch,
+            .elseBranch = elseBranch,
+        }
+    };
+    free(condition);
+    return ret;
 }
 
 StmtVec block(Parser *parser) {
@@ -182,7 +226,7 @@ Expr *primary(Parser *parser) {
 }
 
 Expr *assignment(Parser *parser) {
-    Expr *expr = equality(parser);
+    Expr *expr = or(parser);
     if(parser_match(parser, 1, &(enum TokenType){EQUAL})) {
         Token equals = previous(parser);
         Expr *value = assignment(parser);
@@ -197,6 +241,33 @@ Expr *assignment(Parser *parser) {
         error_token(lox, equals, "Invalid assignment target.");
     }
     return expr;
+}
+
+Expr *or(Parser *parser) {
+    Expr *expr = and(parser);
+    while(parser_match(parser, 1, &(enum TokenType){OR})) {
+        Token operator = previous(parser);
+        Expr *right = and(parser);
+        Expr aux = create_logical_expr(*expr, operator, *right);
+        free(expr);
+        free(right);
+        expr = memcpy(malloc(sizeof(Expr)), &aux, sizeof(Expr));
+    }
+    return expr;
+}
+
+Expr *and(Parser *parser) {
+    Expr *expr = equality(parser);
+    while (parser_match(parser, 1, &(enum TokenType){AND})) {
+        Token operator = previous(parser);
+        Expr *right = equality(parser);
+        Expr aux = create_logical_expr(*expr, operator, *right);
+        free(expr);
+        free(right);
+        expr = memcpy(malloc(sizeof(Expr)), &aux, sizeof(Expr));
+    }
+    return expr;
+    
 }
 
 Token consume(Parser *parser, enum TokenType type, const char *message) {

@@ -9,6 +9,7 @@ typedef struct StmtPrint StmtPrint;
 typedef struct StmtExpression StmtExpression;
 typedef struct StmtVar StmtVar;
 typedef struct StmtBlock StmtBlock;
+typedef struct StmtIf StmtIf;
 
 
 struct StmtVec {
@@ -19,6 +20,7 @@ struct StmtVec {
 
 
 StmtVec create_stmt_vec();
+StmtVec create_stmt_vec_with_start_cap(uint64_t cap);
 void delete_stmt_vec(StmtVec *stmt_vec);
 
 void stmt_vec_push(StmtVec *vec, Stmt stmt);
@@ -29,7 +31,8 @@ enum StmtType {
     StmtTypeExpression,
     StmtTypePrint,
     StmtTypeVar,
-    StmtTypeBlock
+    StmtTypeBlock,
+    StmtTypeIf
 };
 
 struct StmtPrint {
@@ -45,6 +48,11 @@ struct StmtVar {
 struct StmtBlock {
     StmtVec statements;
 };
+struct StmtIf {
+    Expr condition;
+    Stmt *thenBranch;
+    Stmt *elseBranch;
+};
 struct Stmt {
     enum StmtType type;
     union {
@@ -52,6 +60,7 @@ struct Stmt {
         StmtExpression expression;
         StmtVar var;
         StmtBlock block;
+        StmtIf iff;
     };
 };
 

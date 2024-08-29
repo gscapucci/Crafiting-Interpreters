@@ -52,6 +52,7 @@ Object object_minus(Object left, Object right);
 Object object_divide(Object left, Object right);
 Object object_multiply(Object left, Object right);
 
+char *escape_str(const char *str);
 
 
 #endif /* OBJECT_H */

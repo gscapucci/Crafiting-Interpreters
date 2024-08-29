@@ -7,6 +7,7 @@ typedef struct Expr Expr;
 typedef struct ExprBinary ExprBinary;
 typedef struct ExprGrouping ExprGrouping;
 typedef struct ExprLiteral ExprLiteral;
+typedef struct ExprLogical ExprLogical;
 typedef struct ExprUnary ExprUnary;
 typedef struct ExprVariable ExprVariable;
 typedef struct ExprAssign ExprAssign;
@@ -19,6 +20,7 @@ enum ExprType {
     ExprTypeUnary,
     ExprTypeVariable,
     ExprTypeAssign,
+    ExprTypeLogical
 };
 
 struct ExprBinary {
@@ -33,6 +35,12 @@ struct ExprGrouping {
 
 struct ExprLiteral {
     Object value;
+};
+
+struct ExprLogical {
+    Expr *left;
+    Token operator;
+    Expr *right;
 };
 
 struct ExprUnary {
@@ -55,6 +63,7 @@ struct Expr {
         ExprBinary binary;
         ExprGrouping grouping;
         ExprLiteral literal;
+        ExprLogical logical;
         ExprUnary unary;
         ExprVariable variable;
         ExprAssign assign;
@@ -73,6 +82,8 @@ Expr create_unary_expr(Token operator, Expr right);
 Expr create_variable_expr(Token name);
 // The values insided the argumnets are moved, not copied
 Expr create_assign_expr(Token name, Expr value);
+// The values insided the argumnets are moved, not copied
+Expr create_logical_expr(Expr left, Token operator, Expr right);
 
 void delete_expr_tree(Expr *expr);
 void free_expr_tree(Expr *expr);

@@ -204,6 +204,17 @@ Object interpreter_visit_assign_expr(Interpreter *interpreter, ExprAssign expr) 
     return value;
 }
 
+Object interpreter_visit_logical_expr(Interpreter *interpreter, ExprLogical expr) {
+    Object left = evaluate(interpreter, *expr.left);
+
+    if(expr.operator.type == OR) {
+        if(is_truthy(left)) return left;
+    } else {
+        if(!is_truthy(left)) return left;
+    }
+    return evaluate(interpreter, *expr.right);
+}
+
 Object evaluate(Interpreter *interpreter, Expr expr) {
     return interpreter_accept_expr(interpreter, expr);
 }
@@ -222,6 +233,9 @@ void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt) {
         case StmtTypeBlock:
             interpreter_visit_block_stmt(interpreter, stmt.block);
             break;
+        case StmtTypeIf:
+            interpreter_visit_if_stmt(interpreter, stmt.iff);
+            break;
         default:
             throw_runtime_error((Token){0}, "Unknown StmtType", false);
     }
@@ -232,7 +246,7 @@ void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression 
 void interpreter_visit_print_stmt(Interpreter *interpreter, StmtPrint stmt) {
     Object obj = evaluate(interpreter, stmt.expr);
     char *text = stringfy(obj);
-    printf("%s\n", text);
+    printf("%s", text);
     free(text);
 }
 
@@ -246,6 +260,14 @@ void interpreter_visit_var_stmt(Interpreter *interpreter, StmtVar stmt) {
 
 void interpreter_visit_block_stmt(Interpreter *interpreter, StmtBlock stmt) {
     execute_block(interpreter, stmt.statements, create_environment_from_enclosing(interpreter->env));
+}
+
+void interpreter_visit_if_stmt(Interpreter *interpreter, StmtIf stmt) {
+    if(is_truthy(evaluate(interpreter, stmt.condition))) {
+        execute(interpreter, *stmt.thenBranch);
+    } else if(stmt.elseBranch != NULL) {
+        execute(interpreter, *stmt.elseBranch);
+    }
 }
 
 void execute_block(Interpreter *interpreter, StmtVec statements, Environment env) {

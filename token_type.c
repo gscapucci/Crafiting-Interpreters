@@ -68,6 +68,8 @@ char *token_type_to_string(enum TokenType tt) {
             return "OR";
         case PRINT:
             return "PRINT";
+        case PRINTLN:
+            return "PRINTLN";
         case RETURN:
             return "RETURN";
         case SUPER:

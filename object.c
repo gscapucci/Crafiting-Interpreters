@@ -19,9 +19,11 @@ Object create_object_from_double(const double num) {
 
 Object create_object_from_str(const char *str) {
     Object obj;
+    char *aux = escape_str(str);
     obj.object_type = OBJ_TYPE_STRING;
-    obj.value.str = malloc(strlen(str) + 1);
-    memcpy(obj.value.str, str, strlen(str) + 1);
+    obj.value.str = malloc(strlen(aux) + 1);
+    memcpy(obj.value.str, aux, strlen(aux) + 1);
+    free(aux);
     return obj;
 }
 
@@ -169,4 +171,77 @@ Object object_multiply(Object left, Object right) {
     fprintf(stderr, "Unreachable.");
     fflush(stdout);
     exit(1);
+}
+
+char* escape_str(const char* input) {
+    // Calcula o tamanho necessário para a string desscapada
+    size_t tamanho = 0;
+    for (size_t i = 0; input[i] != '\0'; i++) {
+        if (input[i] == '\\') {
+            switch (input[i + 1]) {
+                case 't':
+                case 'r':
+                case 'n':
+                case '"':
+                case '\'':
+                case '\\':
+                    tamanho++;
+                    i++; // Pula o próximo caractere já que ele foi escapado
+                    break;
+                default:
+                    tamanho++;
+                    break;
+            }
+        } else {
+            tamanho++;
+        }
+    }
+
+    // Aloca memória para a nova string
+    char* output = (char*)malloc((tamanho + 1) * sizeof(char));
+    if (output == NULL) {
+        printf("Erro ao alocar memória\n");
+        exit(1);
+    }
+
+    // Copia e desscapa os caracteres
+    size_t j = 0;
+    for (size_t i = 0; input[i] != '\0'; i++) {
+        if (input[i] == '\\') {
+            switch (input[i + 1]) {
+                case 't':
+                    output[j++] = '\t';
+                    i++;
+                    break;
+                case 'r':
+                    output[j++] = '\r';
+                    i++;
+                    break;
+                case 'n':
+                    output[j++] = '\n';
+                    i++;
+                    break;
+                case '"':
+                    output[j++] = '"';
+                    i++;
+                    break;
+                case '\\':
+                    output[j++] = '\\';
+                    i++;
+                    break;
+                case '\'':
+                    output[j++] = '\'';
+                    i++;
+                    break;
+                default:
+                    output[j++] = input[i];
+                    break;
+            }
+        } else {
+            output[j++] = input[i];
+        }
+    }
+    output[j] = '\0'; // Termina a string
+
+    return output;
 }

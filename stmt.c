@@ -8,6 +8,14 @@ StmtVec create_stmt_vec() {
     return vec;
 }
 
+StmtVec create_stmt_vec_with_start_cap(uint64_t cap) {
+    StmtVec vec;
+    vec.cap = cap;
+    vec.stmts = malloc(sizeof(Stmt) * cap);
+    vec.size = 0;
+    return vec;
+}
+
 void delete_stmt_vec(StmtVec *stmt_vec) {
     if(!stmt_vec) return;
     if(!stmt_vec->stmts) return;
@@ -70,6 +78,13 @@ void delete_stmt(Stmt *stmt) {
             break;
         case StmtTypeBlock:
             delete_stmt_vec(&stmt->block.statements);
+            break;
+        case StmtTypeIf:
+            delete_stmt(stmt->iff.thenBranch);
+            free(stmt->iff.thenBranch);
+            delete_stmt(stmt->iff.elseBranch);
+            free(stmt->iff.elseBranch);
+            delete_expr_tree(&stmt->iff.condition);
             break;
         case StmtNULL:
             break;

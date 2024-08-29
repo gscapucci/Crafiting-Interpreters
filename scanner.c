@@ -20,6 +20,7 @@ Scanner create_scanner(const char *source) {
     hashmap_insert(&scan.keywords, "nil", &(enum TokenType){NIL});
     hashmap_insert(&scan.keywords, "or", &(enum TokenType){OR});
     hashmap_insert(&scan.keywords, "print", &(enum TokenType){PRINT});
+    hashmap_insert(&scan.keywords, "println", &(enum TokenType){PRINTLN});
     hashmap_insert(&scan.keywords, "return", &(enum TokenType){RETURN});
     hashmap_insert(&scan.keywords, "super", &(enum TokenType){SUPER});
     hashmap_insert(&scan.keywords, "this", &(enum TokenType){THIS});

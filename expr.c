@@ -57,6 +57,20 @@ Expr create_assign_expr(Token name, Expr value) {
     return expr;
 }
 
+Expr create_logical_expr(Expr left, Token operator, Expr right) {
+    Expr expr;
+    expr.type = ExprTypeLogical;
+
+    expr.logical.left = malloc(sizeof(Expr));
+    *expr.logical.left = left;
+
+    expr.logical.right = malloc(sizeof(Expr));
+    *expr.logical.right = right;
+
+    expr.logical.operator = operator;
+    return expr;
+}
+
 void delete_expr_tree(Expr *expr) {
     if(!expr) return;
     switch(expr->type) {
@@ -74,6 +88,10 @@ void delete_expr_tree(Expr *expr) {
             break;
         case ExprTypeAssign:
             free_expr_tree(expr->assign.value);
+            break;
+        case ExprTypeLogical:
+            free_expr_tree(expr->logical.left);
+            free_expr_tree(expr->logical.right);
             break;
         case ExprTypeVariable:
             break;
@@ -100,6 +118,9 @@ void free_expr_tree(Expr *expr) {
         case ExprTypeAssign:
             free_expr_tree(expr->assign.value);
             break;
+        case ExprTypeLogical:
+            free_expr_tree(expr->logical.left);
+            free_expr_tree(expr->logical.right);
         case ExprTypeVariable:
             break;
         case ExprTypeNULL:
