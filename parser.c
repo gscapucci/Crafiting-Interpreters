@@ -18,6 +18,7 @@ Parser create_parser(Lox *l, TokenVec vec) {
     lox = l;
     parser.current = 0;
     parser.vec = vec;
+    parser.had_error = false;
     return parser;
 }
 
@@ -25,6 +26,10 @@ StmtVec parse(Parser *parser) {
     StmtVec statements = create_stmt_vec();
     while(!parser_is_at_end(parser)) {
         stmt_vec_push(&statements, declaration(parser));
+    }
+    if(parser->had_error) {
+        delete_stmt_vec(&statements);
+        return (StmtVec){0};
     }
     return statements;
 }
@@ -39,9 +44,10 @@ Stmt statement(Parser *parser) {
 
 Stmt declaration(Parser *parser) {
     if(setjmp(parse_error_obj.buff) == 1) {
-        // fprintf(stderr, "%s\n", parse_error_obj.msg);
+        fprintf(stderr, "%s\n", parse_error_obj.msg);
         free(parse_error_obj.msg);
         synchronize(parser);
+        parser->had_error = true;
         return (Stmt){0};
     }
     if(parser_match(parser, 1, &(enum TokenType){VAR})) {
@@ -59,15 +65,19 @@ Stmt expression_statement(Parser *parser) {
 }
 
 Stmt print_statement(Parser *parser) {
+    consume(parser, LEFT_PAREN, "Expect '(' after print statement");
     Expr *value = expression(parser);
-    consume(parser, SEMICOLON, "Expect ';' after value.");
+    consume(parser, RIGHT_PAREN, "Expect ')' after value statement");
+    consume(parser, SEMICOLON, "Expect ';' after left parenthesis.");
     Stmt stmt = create_stmt_print(*value);
     free(value);
     return stmt;
 }
 
 Stmt println_statement(Parser *parser) {
+    consume(parser, LEFT_PAREN, "Expect '(' after print statement");
     Expr *value = expression(parser);
+    consume(parser, RIGHT_PAREN, "Expect ')' after value statement");
     consume(parser, SEMICOLON, "Expect ';' after value");
     StmtVec vec = create_stmt_vec_with_start_cap(2);
     stmt_vec_push(&vec, create_stmt_print(*value));

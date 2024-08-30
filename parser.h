@@ -12,6 +12,7 @@ typedef struct Parser Parser;
 struct Parser {
     TokenVec vec;
     int64_t current;
+    bool had_error;
 };
 
 // move the values inside vec

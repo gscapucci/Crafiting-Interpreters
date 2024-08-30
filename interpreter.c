@@ -237,7 +237,9 @@ void interpreter_accept_stmt(Interpreter *interpreter, Stmt stmt) {
             interpreter_visit_if_stmt(interpreter, stmt.iff);
             break;
         default:
-            throw_runtime_error((Token){0}, "Unknown StmtType", false);
+            char *str = calloc(100, 1);
+            sprintf(str, "Unknown StmtType(%d)", stmt.type);
+            throw_runtime_error((Token){0}, str, true);
     }
 }
 void interpreter_visit_expression_stmt(Interpreter *interpreter, StmtExpression stmt) {
@@ -342,15 +344,18 @@ char *stringfy(Object obj) {
             return memcpy(malloc(sizeof("null")), "null", sizeof("null"));
         case OBJ_TYPE_FLOAT:
             {
-                char *text = calloc(20, 1);
-                sprintf(text, "%f", obj.value.f_num);
-                for(int64_t i = strlen(text);; i--) {
-                    if(i <= 0) break;
-                    if(text[i] == '0') text[i] = 0;
-                    if(text[i] == '.') {
-                        text[i + 1] = '0';
-                        break;
-                    }
+                char *text = calloc(100, 1);
+                sprintf(text, "%lf", obj.value.f_num);
+                int64_t i = strlen(text) - 1;
+    
+                while (i >= 0 && text[i] == '0') {
+                    text[i] = '\0';
+                    i--;
+                }
+
+                if (i >= 0 && text[i] == '.') {
+                    text[i + 1] = '0';
+                    text[i + 2] = '\0';
                 }
                 return text;
             }
