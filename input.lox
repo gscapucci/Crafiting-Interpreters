@@ -1,8 +1,0 @@
-print "a";
-print "b";
-
-print "\n";
-
-
-println "c";
-println "d";

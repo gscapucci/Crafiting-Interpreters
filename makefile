@@ -1,12 +1,6 @@
-HEADER_FILES=	macro.h lox.h error.h macro.h scanner.h\
-				token_type.h token_vec.h token.h hashmap.h\
-				expr.h parser.h interpreter.h stmt.h\
-				object.h environment.h
+HEADER_FILES=
 
-SOURCE_FILES=	main.c lox.c error.c scanner.c token_vec.c\
-				token.c token_type.c hashmap.c expr.c parser.c\
-				interpreter.c stmt.c object.c environment.c
-OBJ_FILES= hashmap.o
+SOURCE_FILES=
 FILES=$(SOURCE_FILES) $(HEADER_FILES)
 CC=gcc
 FLAGS=-Wall -Wextra
@@ -26,4 +20,3 @@ memcheck: debug
 
 debug: $(FILES)
 	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)
-
