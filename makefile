@@ -1,6 +1,5 @@
-HEADER_FILES=
-
-SOURCE_FILES=
+HEADER_FILES= chunk.h common.h debug.h memory.h value.h
+SOURCE_FILES= chunk.c debug.c main.c memory.c value.c
 FILES=$(SOURCE_FILES) $(HEADER_FILES)
 CC=gcc
 FLAGS=-Wall -Wextra
@@ -16,7 +15,7 @@ main: debug
 	$(CC) -O3 $(SOURCE_FILES) -o $(OUTPUT) $(LINK)
 
 memcheck: debug
-	$(VALGRIND) $(VALGRIND_FLAGS) ./$(A_OUT) $(LOX_INPUT)
+	$(VALGRIND) $(VALGRIND_FLAGS) ./$(A_OUT)
 
 debug: $(FILES)
 	$(CC) $(FLAGS) -g $(SOURCE_FILES) $(LINK)
