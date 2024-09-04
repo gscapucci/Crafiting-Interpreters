@@ -1,5 +1,5 @@
-HEADER_FILES= chunk.h common.h debug.h memory.h value.h
-SOURCE_FILES= chunk.c debug.c main.c memory.c value.c
+HEADER_FILES= chunk.h common.h debug.h memory.h value.h vm.h compiler.h scanner.h
+SOURCE_FILES= chunk.c debug.c main.c memory.c value.c vm.c compiler.c scanner.c
 FILES=$(SOURCE_FILES) $(HEADER_FILES)
 CC=gcc
 FLAGS=-Wall -Wextra
