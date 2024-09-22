@@ -1,0 +1,35 @@
+format ELF64 executable 3
+use64
+segment executable
+entry main
+main:
+    ;; Push int64_t constant
+    mov rax, 1
+    push rax
+    ;; Push int64_t constant
+    mov rax, 2
+    push rax
+;;  -- OP_add --
+    pop rbx
+    pop rax
+    add rax, rbx
+    push rax
+    ;; Push int64_t constant
+    mov rax, 5
+    push rax
+    ;; Push int64_t constant
+    mov rax, 5
+    push rax
+;;  -- OP_add --
+    pop rbx
+    pop rax
+    add rax, rbx
+    push rax
+;;  -- OP_imul --
+    pop rbx
+    pop rax
+    imul rax, rbx
+    push rax
+    mov rax, 60  ; syscall for exit
+    xor rdi, rdi ; status 0
+    syscall

@@ -167,9 +167,19 @@ static void grouping() {
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void number() {
+static void float_number() {
     double value = strtold(parser.previous.start, NULL);
-    emit_constant(NUMBER_VAL(value));
+    emit_constant(FLOAT_VAL(value));
+}
+
+static void uint_number() {
+    uint64_t value = (int64_t)strtoull(parser.previous.start, NULL, 10);
+    emit_constant(UINT_VAL(value));
+}
+
+static void int_number() {
+    int64_t value = (int64_t)strtoll(parser.previous.start, NULL, 10);
+    emit_constant(INT_VAL(value));
 }
 
 static void string() {
@@ -209,8 +219,10 @@ ParseRule rules[] = {
   [TOKEN_LESS]          = {NULL,     binary,    PREC_COMPARISON},
   [TOKEN_LESS_EQUAL]    = {NULL,     binary,    PREC_COMPARISON},
   [TOKEN_IDENTIFIER]    = {NULL,     NULL,      PREC_NONE},
-  [TOKEN_STRING]        = {string,     NULL,      PREC_NONE},
-  [TOKEN_NUMBER]        = {number,   NULL,      PREC_NONE},
+  [TOKEN_STRING]        = {string,     NULL,    PREC_NONE},
+  [TOKEN_INT]           = {int_number,   NULL,      PREC_NONE},
+  [TOKEN_UINT]          = {uint_number,   NULL,      PREC_NONE},
+  [TOKEN_FLOAT]         = {float_number,   NULL,      PREC_NONE},
   [TOKEN_AND]           = {NULL,     NULL,      PREC_NONE},
   [TOKEN_CLASS]         = {NULL,     NULL,      PREC_NONE},
   [TOKEN_ELSE]          = {NULL,     NULL,      PREC_NONE},

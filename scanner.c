@@ -144,11 +144,19 @@ static Token identifier() {
 
 static Token number() {
     while(is_digit(peek())) advance();
-    if(peek() == '.' && is_digit(peek_next())) {
+    bool is_float = false;
+    if((is_float = (peek() == '.')) && is_digit(peek_next())) {
         advance();
         while(is_digit(peek())) advance();
     }
-    return make_token(TOKEN_NUMBER);
+    if(is_float) {
+        return make_token(TOKEN_FLOAT);
+    } else {
+        if(peek() == 'u') {
+            return make_token(TOKEN_UINT);
+        }
+        return make_token(TOKEN_INT);
+    }
 }
 
 static Token string() {
