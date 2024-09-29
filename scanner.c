@@ -150,13 +150,18 @@ static Token number() {
         while(is_digit(peek())) advance();
     }
     if(is_float) {
-        return make_token(TOKEN_FLOAT);
+        if(peek() == 'f') {
+            return make_token(TOKEN_FLOAT);
+        }
     } else {
         if(peek() == 'u') {
             return make_token(TOKEN_UINT);
         }
-        return make_token(TOKEN_INT);
+        if(peek() == 'i') {
+            return make_token(TOKEN_INT);
+        }
     }
+    return error_token("numbers must end with 'f', 'u' or 'i'.");
 }
 
 static Token string() {
@@ -180,7 +185,15 @@ Token scan_token() {
 
     char c = advance();
     if(is_alpha(c)) return identifier();
-    if(is_digit(c)) return number();
+    if(is_digit(c)) {
+        Token n = number();
+        char c = advance();
+        if(c == 'u' || c == 'i' || c == 'f') {
+            return n;
+        } else {
+            error_token("Expect end a number with 'u', 'i' or 'f'");
+        }
+    };
 
     switch(c) {
         case '(': return make_token(TOKEN_LEFT_PAREN);

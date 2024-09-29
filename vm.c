@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#include "assembly.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
@@ -285,6 +286,7 @@ static CompileResult native_compile(const char *output_path) {
         fprintf(stderr, "Memory allocation failed.\n");
         return COMPILE_ERROR;
     }
+
     memcpy(output_file_path, output_path, strlen(output_path) - strlen(".lox"));
     strcat(output_file_path, ".fasm");
 
@@ -305,114 +307,80 @@ static CompileResult native_compile(const char *output_path) {
 
     uint64_t type_stack_size = 0;
     uint64_t type_stack_cap = 200;
-    CompileResult result = COMPILE_OK; // Variable to track success
+    CompileResult result = COMPILE_OK;
 
-    // FASM file header
-    const char *fasm_header = 
-        "format ELF64 executable 3\n"
-        "use64\n"
-        "segment executable\n"
-        "entry main\n";
-    
-    fprintf(output_file, "%s", fasm_header);
+    uint64_t float_count = 0;
+    double *floats = ALLOCATE(double, 200);
+    if (!floats) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        fclose(output_file);
+        free(output_file_path);
+        return COMPILE_ERROR;
+    }
+
+    uint64_t floats_size = 0;
+    uint64_t floats_cap = 200;
+
+    // Escreve o cabeçalho do arquivo FASM
+    write_asm_header(output_file);
+    fprintf_asm_aux_functions(output_file);
     fprintf(output_file, "main:\n");
 
     for (;;) {
-        if(type_stack_size >= type_stack_cap) {
+        if (type_stack_size >= type_stack_cap) {
             type_stack = GROW_ARRAY(ValueType, type_stack, type_stack_cap, type_stack_cap * 2);
         }
+        if (floats_size >= floats_cap) {
+            floats = GROW_ARRAY(double, floats, floats_cap, floats_cap * 2);
+        }
+
         uint8_t instruction = READ_BYTE();
         switch (instruction) {
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
-                switch (constant.type) {
-                    case VAL_UINT:
-                        fprintf(output_file, "    ;; Push uint64_t constant\n");
-                        fprintf(output_file, "    mov rax, %lu\n", constant.as.uint_number);
-                        fprintf(output_file, "    push rax\n");
-                        break;
-                    case VAL_INT:
-                        fprintf(output_file, "    ;; Push int64_t constant\n");
-                        fprintf(output_file, "    mov rax, %ld\n", constant.as.int_number);
-                        fprintf(output_file, "    push rax\n");
-                        break;
-                    case VAL_BOOL:
-                        fprintf(output_file, "    ;; Push bool constant\n");
-                        fprintf(output_file, "    mov rax, %d\n", constant.as.boolean ? 1 : 0);
-                        fprintf(output_file, "    push rax\n");
-                        break;
-                    default:
-                        runtime_error("Unknown constant type in OP_CONSTANT.");
-                        result = COMPILE_ERROR;
-                        goto cleanup;
+                if(constant.type != VAL_UINT && constant.type != VAL_INT && constant.type != VAL_BOOL && constant.type != VAL_FLOAT) {
+                    runtime_error("Unknown constant type in OP_CONSTANT.");
                 }
+                if(constant.type == VAL_FLOAT) {
+                    floats[floats_size++] = constant.as.float_number;
+                }
+                write_constant(output_file, constant, &float_count);
                 type_stack[type_stack_size++] = constant.type;
                 break;
             }
             case OP_NIL:
-                fprintf(output_file, "    ;;  -- OP_NIL --\n");
+                fprintf(output_file, "    ;; Push nil\n");
                 fprintf(output_file, "    mov rax, 0\n");
                 fprintf(output_file, "    push rax\n");
                 type_stack[type_stack_size++] = VAL_NIL;
                 break;
             case OP_TRUE:
-                fprintf(output_file, "    ;;  -- OP_TRUE --\n");
+                fprintf(output_file, "    ;; Push true\n");
                 fprintf(output_file, "    mov rax, 1\n");
                 fprintf(output_file, "    push rax\n");
                 type_stack[type_stack_size++] = VAL_BOOL;
                 break;
             case OP_FALSE:
-                fprintf(output_file, "    ;;  -- OP_FALSE --\n");
+                fprintf(output_file, "    ;; Push false\n");
                 fprintf(output_file, "    mov rax, 0\n");
                 fprintf(output_file, "    push rax\n");
                 type_stack[type_stack_size++] = VAL_BOOL;
                 break;
-            case OP_EQUAL: {
+            case OP_EQUAL:
                 if (type_stack_size < 2) {
-                    runtime_error("Type stack underflow in OP_EQUAL.");
                     result = COMPILE_ERROR;
-                    goto cleanup;
-                }
-                ValueType b = type_stack[--type_stack_size];
-                ValueType a = type_stack[--type_stack_size];
-                if(a != b) {
-                    fprintf(output_file, "    ;;  -- OP_EQUAL (DIFF TYPES) --\n");
-                    fprintf(output_file, "    push 0\n");
                     break;
                 }
-                fprintf(output_file, "    ;;  -- OP_EQUAL --\n");
-                fprintf(output_file, "    pop rbx\n");
-                fprintf(output_file, "    pop rax\n");
-                fprintf(output_file, "    cmp rax, rbx\n");
-                fprintf(output_file, "    sete al\n");
-                fprintf(output_file, "    movzx rax, al\n");
-                fprintf(output_file, "    push rax\n");
-                type_stack[type_stack_size++] = VAL_BOOL;
+                write_comparison(output_file, "sete", type_stack, &type_stack_size);
                 break;
-            }
-            case OP_GREATER: {
+            case OP_GREATER:
                 if (type_stack_size < 2) {
-                    runtime_error("Type stack underflow in OP_GREATER.");
+                    runtime_error("Type stack underflow in comparison.");
                     result = COMPILE_ERROR;
-                    goto cleanup;
-                }
-                ValueType b = type_stack[--type_stack_size];
-                ValueType a = type_stack[--type_stack_size];
-                if(a != b) {
-                    fprintf(output_file, "    ;;  -- OP_EQUAL (DIFF TYPES) --\n");
-                    fprintf(output_file, "    push 0\n");
                     break;
                 }
-                fprintf(output_file, ";;  -- OP_GREATER --\n");
-                fprintf(output_file, "    pop rbx\n");
-                fprintf(output_file, "    pop rax\n");
-                fprintf(output_file, "    cmp rax, rbx\n");
-                fprintf(output_file, "    setg al\n");
-                fprintf(output_file, "    movzx rax, al\n");
-                fprintf(output_file, "    push rax\n");
-                type_stack[type_stack_size++] = VAL_BOOL;
+                write_comparison(output_file, "setg", type_stack, &type_stack_size);
                 break;
-            }
             case OP_ADD:
             case OP_SUBTRACT:
             case OP_MULTIPLY:
@@ -420,34 +388,101 @@ static CompileResult native_compile(const char *output_path) {
                 if (type_stack_size < 2) {
                     runtime_error("Type stack underflow in arithmetic operation.");
                     result = COMPILE_ERROR;
-                    goto cleanup;
+                    break;
                 }
                 ValueType b = type_stack[--type_stack_size];
                 ValueType a = type_stack[--type_stack_size];
-                if(a != b) {
+                if (a != b) {
                     runtime_error("Operands must be of the same type");
                     result = COMPILE_ERROR;
-                    goto cleanup;
+                    break;
                 }
-                const char *op = NULL;
-                if (instruction == OP_ADD) op = "add";
-                else if (instruction == OP_SUBTRACT) op = "sub";
-                else if (instruction == OP_MULTIPLY) op = "imul";
-                else if (instruction == OP_DIVIDE) op = "idiv";
-                
-                fprintf(output_file, ";;  -- OP_%s --\n", op);
+                const char *op = get_arithmetic_op(instruction, a);
+                if (!op) {
+                    runtime_error("Unknown arithmetic operation.");
+                    result = COMPILE_ERROR;
+                    break;
+                }
+                fprintf(output_file, "    ;; Arithmetic operation: %s\n", op);
                 fprintf(output_file, "    pop rbx\n");
                 fprintf(output_file, "    pop rax\n");
-                fprintf(output_file, "    %s rax, rbx\n", op);
-                fprintf(output_file, "    push rax\n");
+                if (a == VAL_INT || a == VAL_UINT) {
+                    const char *operand = (a == VAL_INT) ? "signed" : "unsigned";
+
+                    if (!strcmp(op, "div") || !strcmp(op, "idiv")) {
+                        // Divisão: diferenciando entre signed e unsigned
+                        fprintf(output_file, "    ;; %s division\n", operand);
+                        fprintf(output_file, "    %s rbx\n", op);  // 'div' ou 'idiv'
+                    } else if (!strcmp(op, "imul")) {
+                        // Multiplicação: diferenciando entre signed e unsigned
+                        fprintf(output_file, "    ;; signed multiplication\n");
+                        fprintf(output_file, "    imul rax, rbx\n");  //'imul'
+                    } else if(!strcmp(op, "mul")) {
+                        fprintf(output_file, "    ;; unsigned multiplication\n");
+                        fprintf(output_file, "    mul rbx\n");
+                    } else if (!strcmp(op, "add") || !strcmp(op, "sub")) {
+                        // Operações comuns para adição e subtração (tanto signed quanto unsigned)
+                        fprintf(output_file, "    ;; %s operation\n", op);
+                        fprintf(output_file, "    %s rax, rbx\n", op);
+                    }
+                    fprintf(output_file, "    push rax\n");  // Empurra o resultado de volta na pilha
+                } else if(a == VAL_FLOAT) {
+                    if(!strcmp(op, "addsd")) {
+                        fprintf(output_file, "    ;; float addition\n");
+                        fprintf(output_file, "    movq xmm0, rax\n");
+                        fprintf(output_file, "    movq xmm1, rbx\n");
+                        fprintf(output_file, "    addsd xmm0, xmm1\n");
+                        fprintf(output_file, "    movq rax, xmm0\n");
+                    } else if(!strcmp(op, "subsd")) {
+                        fprintf(output_file, "    movq xmm0, rax\n");
+                        fprintf(output_file, "    movq xmm1, rbx\n");
+                        fprintf(output_file, "    subsd xmm0, xmm1\n");
+                        fprintf(output_file, "    movq rax, xmm0\n");
+                    } else if(!strcmp(op, "mulsd")) {
+                        fprintf(output_file, "    movq xmm0, rax\n");
+                        fprintf(output_file, "    movq xmm1, rbx\n");
+                        fprintf(output_file, "    mulsd xmm0, xmm1\n");
+                        fprintf(output_file, "    movq rax, xmm0\n");
+                    } else if(!strcmp(op, "divsd")) {
+                        fprintf(output_file, "    movq xmm0, rax\n");
+                        fprintf(output_file, "    movq xmm1, rbx\n");
+                        fprintf(output_file, "    divsd xmm0, xmm1\n");
+                        fprintf(output_file, "    movq rax, xmm0\n");
+                    }
+                    fprintf(output_file, "    push rax");
+                }
                 type_stack[type_stack_size++] = a;
                 break;
             }
             case OP_RETURN:
-                type_stack_size--;
-                fprintf(output_file, "    mov rax, 60  ; syscall for exit\n");
-                fprintf(output_file, "    xor rdi, rdi ; status 0\n");
-                fprintf(output_file, "    syscall\n");
+                if(type_stack_size > 0) {
+                    ValueType a = type_stack[--type_stack_size];
+                    switch(a) {
+                        case VAL_INT:
+                            fprintf(output_file, "    ;; -- Print Int\n");
+                            fprintf(output_file, "    pop rdi\n");
+                            fprintf(output_file, "    call __built_in_print_int\n");
+                            break;
+                        case VAL_UINT:
+                            fprintf(output_file, "    ;; -- Print Uint\n");
+                            fprintf(output_file, "    pop rdi\n");
+                            fprintf(output_file, "    call __built_in_print_uint\n");
+                            break;
+                        case VAL_BOOL:
+                            fprintf(output_file, "    ;; -- Print bool\n");
+                            fprintf(output_file, "    pop rdi\n");
+                            fprintf(output_file, "    call __built_in_print_uint\n");
+                            break;
+                        case VAL_FLOAT:
+                            fprintf(output_file, "    ;; -- Print Float\n");
+                            fprintf(output_file, "    pop rdi\n");
+                            fprintf(output_file, "    call __built_in_print_float\n");
+                            break;
+
+                    }
+                }
+                fprintf(output_file, "    ;; Return from main\n");
+                write_syscall_exit(output_file);
                 goto cleanup;
             default:
                 fprintf(stderr, "Unrecognized opcode: %d\n", instruction);
@@ -456,14 +491,20 @@ static CompileResult native_compile(const char *output_path) {
         }
     }
 
+    #undef READ_BYTE
+    #undef READ_CONSTANT
+
 cleanup:
+
+    fprintf(output_file, "segment writable\n");
+    for(uint64_t i = 0; i < floats_size; i++) {
+        fprintf(output_file, "    double_val_%zu dq %lf\n", i, floats[i]);
+    }
+
     fclose(output_file);
     free(output_file_path);
     free(type_stack);
     return result;
-
-    #undef READ_BYTE
-    #undef READ_CONSTANT
 }
 
 CompileResult compile_to_native(const char *source, const char *output_path) {

@@ -2,3 +2,13 @@
 !*.*
 /.vscode
 *.out
+*.add
+*.exe
+*.inc
+*.INC
+*.fasm
+/.API
+/.ENCODING
+/.EQUATES
+/.MACRO
+/.PCOUNT
