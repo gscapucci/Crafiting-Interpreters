@@ -3,216 +3,71 @@ use64
 segment executable
 entry main
 __built_in_print_float:
-    sub     rsp, 520
-    mov     r9, rdi
-    xor     eax, eax
-    mov     ecx, 64
-    mov     rdi, rsp
-    mov     rdx, r9
-    mov     r10, rsp
-    rep stosq
-    not     rdx
-    mov     rax, 9218868437227405312
-    test    rdx, rax
-    je      .L25
-    movq    xmm0, r9
-    test    r9, r9
-    js      .L26
-    movsd   xmm1, QWORD [rip]
-    comisd  xmm0, xmm1
-    jnb     .L7
-.L28:
-    cvttsd2si       rcx, xmm0
-    test    rcx, rcx
-    js      .L9
-.L27:
-    pxor    xmm2, xmm2
-    cvtsi2sd        xmm2, rcx
-.L10:
-    subsd   xmm0, xmm2
-    mulsd   xmm0, QWORD [rip]
-    comisd  xmm0, xmm1
-    jnb     .L11
-    cvttsd2si       rdi, xmm0
-.L12:
-    mov     r8, -3689348814741910323
-    mov     rax, rdi
-    mov     BYTE [rsp+500], 46
-    mul     r8
-    shr     rdx, 3
-    lea     rax, [rdx+rdx*4]
-    mov     rsi, rdx
-    add     rax, rax
-    sub     rdi, rax
-    mov     rax, rdx
-    mul     r8
-    add     edi, 48
-    mov     BYTE [rsp+510], dil
-    shr     rdx, 3
-    lea     rax, [rdx+rdx*4]
-    mov     rdi, rdx
-    add     rax, rax
-    sub     rsi, rax
-    mov     rax, rdx
-    mul     r8
-    add     esi, 48
-    mov     BYTE [rsp+509], sil
-    mov     rsi, rdx
-    shr     rsi, 3
-    lea     rax, [rsi+rsi*4]
-    add     rax, rax
-    sub     rdi, rax
-    mov     rax, rsi
-    mul     r8
-    add     edi, 48
-    mov     BYTE [rsp+508], dil
-    shr     rdx, 3
-    lea     rax, [rdx+rdx*4]
-    mov     rdi, rdx
-    add     rax, rax
-    sub     rsi, rax
-    mov     rax, rdx
-    mul     r8
-    add     esi, 48
-    mov     BYTE [rsp+507], sil
-    mov     rsi, rdx
-    shr     rsi, 3
-    lea     rax, [rsi+rsi*4]
-    add     rax, rax
-    sub     rdi, rax
-    mov     rax, rsi
-    mul     r8
-    add     edi, 48
-    mov     BYTE [rsp+506], dil
-    mov     rdi, rdx
-    shr     rdi, 3
-    lea     rax, [rdi+rdi*4]
-    add     rax, rax
-    sub     rsi, rax
-    mov     rax, rdi
-    mul     r8
-    add     esi, 48
-    mov     BYTE [rsp+505], sil
-    mov     rsi, rdx
-    shr     rsi, 3
-    lea     rax, [rsi+rsi*4]
-    add     rax, rax
-    sub     rdi, rax
-    mov     rax, rsi
-    mul     r8
-    add     edi, 48
-    mov     BYTE [rsp+504], dil
-    shr     rdx, 3
-    lea     rax, [rdx+rdx*4]
-    mov     rdi, rdx
-    add     rax, rax
-    sub     rsi, rax
-    mov     rax, rdx
-    mul     r8
-    add     esi, 48
-    mov     BYTE [rsp+503], sil
-    mov     rsi, rdx
-    shr     rsi, 3
-    lea     rax, [rsi+rsi*4]
-    add     rax, rax
-    sub     rdi, rax
-    mov     rax, rsi
-    mul     r8
-    add     edi, 48
-    mov     BYTE [rsp+502], dil
-    shr     rdx, 3
-    lea     rax, [rdx+rdx*4]
-    add     rax, rax
-    sub     rsi, rax
-    add     esi, 48
-    mov     BYTE [rsp+501], sil
-    test    rcx, rcx
-    jne     .L18
-    mov     BYTE [rsp+499], 48
-    mov     esi, 499
-.L14:
-    test    r9, r9
-    jns     .L15
-    mov     BYTE [rsp-1+rsi], 45
-    sub     rsi, 1
-.L15:
-    mov     edx, 511
-    sub     rdx, rsi
-.L23:
-    add     rsi, r10
-    mov     edi, 1
-    mov     rax, 1
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 48
+    movsd   QWORD [rbp-40], xmm0
+    pxor    xmm0, xmm0
+    comisd  xmm0, QWORD [rbp-40]
+    seta    al
+    movzx   eax, al
+    mov     DWORD [rbp-4], eax
+    cmp     DWORD [rbp-4], 0
+    je      .L6
+    movsd   xmm0, QWORD [rbp-40]
+    movq    xmm1, QWORD [minus_str]
+    xorpd   xmm0, xmm1
+    movsd   QWORD [rbp-40], xmm0
+    mov     rdx, 1
+    mov     rsi, minus_str
     mov     rdi, 1
+    mov     rax, 1
     syscall
-    add     rsp, 520
-    ret
-.L7:
-    movapd  xmm2, xmm0
-    subsd   xmm2, xmm1
-    cvttsd2si       rcx, xmm2
-    btc     rcx, 63
-    test    rcx, rcx
-    jns     .L27
-.L9:
-    mov     rax, rcx
-    mov     rdx, rcx
-    pxor    xmm2, xmm2
-    shr     rax, 1
-    and     edx, 1
-    or      rax, rdx
-    cvtsi2sd        xmm2, rax
-    addsd   xmm2, xmm2
-    jmp     .L10
-.L26:
-    xorpd   xmm0, [rip]
-    movsd   xmm1, QWORD [rip]
-    comisd  xmm0, xmm1
-    jnb     .L7
-    jmp     .L28
-.L18:
-    mov     esi, 500
-.L13:
-    mov     rax, rcx
-    sub     rsi, 1
-    mul     r8
-    mov     rax, rcx
-    shr     rdx, 3
-    lea     rdi, [rdx+rdx*4]
-    add     rdi, rdi
-    sub     rax, rdi
-    add     eax, 48
-    mov     BYTE [r10+rsi], al
-    mov     rax, rcx
-    mov     rcx, rdx
-    cmp     rax, 9
-    ja      .L13
-    jmp     .L14
-.L11:
+.L6:
+    movsd   xmm0, QWORD [rbp-40]
+    cvttsd2si       rax, xmm0
+    mov     QWORD [rbp-16], rax
+    mov     rax, QWORD [rbp-16]
+    mov     rdx, rax
+    neg     rdx
+    cmovns  rax, rdx
+    mov     rdi, rax
+    call    __built_in_print_int
+    mov     rdx, 1
+    mov     rsi, dot_str
+    mov     rdi, 1
+    mov     rax, 1
+    syscall
+    pxor    xmm1, xmm1
+    cvtsi2sd        xmm1, QWORD [rbp-16]
+    movsd   xmm0, QWORD [rbp-40]
     subsd   xmm0, xmm1
-    cvttsd2si       rdi, xmm0
-    btc     rdi, 63
-    jmp     .L12
-.L25:
-    mov     rax, 4503599627370495
-    test    r9, rax
-    je      .L29
-    mov     edx, 24910
-    mov     BYTE [rsp+510], 78
-    mov     esi, 508
-    mov     WORD [rsp+508], dx
-    mov     edx, 3
-    jmp     .L23
-.L29:
-    sar     r9, 63
-    mov     eax, 28233
-    mov     edx, 4
-    mov     BYTE [rsp+510], 102
-    and     r9d, 2
-    mov     WORD [rsp+508], ax
-    mov     esi, 507
-    add     r9d, 43
-    mov     BYTE [rsp+507], r9b
-    jmp     .L23
+    movsd   QWORD [rbp-24], xmm0
+    movsd   xmm1, QWORD [rbp-24]
+    movsd   xmm0, QWORD [factor]
+    mulsd   xmm0, xmm1
+    cvttsd2si       rax, xmm0
+    mov     QWORD [rbp-32], rax
+    mov     rax, QWORD [rbp-32]
+    mov     rdx, rax
+    neg     rdx
+    cmovns  rax, rdx
+    mov     rdi, rax
+    cmp    rdi, 0
+    je      .print_zeros
+    call    __built_in_print_int
+    nop
+    leave
+    ret
+.print_zeros:
+    mov rdx, 6
+    mov rsi, zeros
+    mov rdi, 1
+    mov rax, 1
+    syscall
+    nop
+    leave
+    ret
 __built_in_print_int:
     mov     rcx, rdi
     sub     rsp, 40
@@ -285,59 +140,28 @@ __built_in_print_uint:
     add     rsp, 40
     ret
 main:
-    ;; Push int64_t constant
-    mov rax, 123
+    ;; Push uint64_t constant
+    mov rax, 1
     push rax
-    ;; Push int64_t constant
-    mov rax, 321
+    ;; Push uint64_t constant
+    mov rax, 1
     push rax
-    ;; Arithmetic operation: add
+    ;; sete comparison
     pop rbx
     pop rax
-    ;; add operation
-    add rax, rbx
+    cmp rax, rbx
+    sete al
+    movzx rax, al
     push rax
-    ;; Push int64_t constant
-    mov rax, 4
-    push rax
-    ;; Push int64_t constant
-    mov rax, 2
-    push rax
-    ;; Arithmetic operation: sub
-    pop rbx
-    pop rax
-    ;; sub operation
-    sub rax, rbx
-    push rax
-    ;; Arithmetic operation: idiv
-    pop rbx
-    pop rax
-    ;; signed division
-    idiv rbx
-    push rax
-    ;; Push int64_t constant
-    mov rax, 5
-    push rax
-    ;; Push int64_t constant
-    mov rax, 5
-    push rax
-    ;; Arithmetic operation: imul
-    pop rbx
-    pop rax
-    ;; signed multiplication
-    imul rax, rbx
-    push rax
-    ;; Arithmetic operation: imul
-    pop rbx
-    pop rax
-    ;; signed multiplication
-    imul rax, rbx
-    push rax
-    ;; -- Print Int
+    ;; -- Print bool
     pop rdi
-    call __built_in_print_int
+    call __built_in_print_uint
     ;; Return from main
     mov rax, 60  ; syscall for exit
     xor rdi, rdi ; exit status 0
     syscall
 segment writable
+    factor dq 1000000.0
+    minus_str db "-", 0
+    dot_str db ".", 0
+    zeros db "000000", 0
