@@ -1,0 +1,241 @@
+format ELF64 executable 3
+use64
+segment executable
+entry main
+__built_in_print_float:
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 48
+    movsd   QWORD [rbp-40], xmm0
+    pxor    xmm0, xmm0
+    comisd  xmm0, QWORD [rbp-40]
+    seta    al
+    movzx   eax, al
+    mov     DWORD [rbp-4], eax
+    cmp     DWORD [rbp-4], 0
+    je      .L6
+    movsd   xmm0, QWORD [rbp-40]
+    movq    xmm1, QWORD [minus_str]
+    xorpd   xmm0, xmm1
+    movsd   QWORD [rbp-40], xmm0
+    mov     rdx, 1
+    mov     rsi, minus_str
+    mov     rdi, 1
+    mov     rax, 1
+    syscall
+.L6:
+    movsd   xmm0, QWORD [rbp-40]
+    cvttsd2si       rax, xmm0
+    mov     QWORD [rbp-16], rax
+    mov     rax, QWORD [rbp-16]
+    mov     rdx, rax
+    neg     rdx
+    cmovns  rax, rdx
+    mov     rdi, rax
+    call    __built_in_print_int
+    mov     rdx, 1
+    mov     rsi, dot_str
+    mov     rdi, 1
+    mov     rax, 1
+    syscall
+    pxor    xmm1, xmm1
+    cvtsi2sd        xmm1, QWORD [rbp-16]
+    movsd   xmm0, QWORD [rbp-40]
+    subsd   xmm0, xmm1
+    movsd   QWORD [rbp-24], xmm0
+    movsd   xmm1, QWORD [rbp-24]
+    movsd   xmm0, QWORD [factor]
+    mulsd   xmm0, xmm1
+    cvttsd2si       rax, xmm0
+    mov     QWORD [rbp-32], rax
+    mov     rax, QWORD [rbp-32]
+    mov     rdx, rax
+    neg     rdx
+    cmovns  rax, rdx
+    mov     rdi, rax
+    cmp    rdi, 0
+    je      .print_zeros
+    call    __built_in_print_int
+    nop
+    leave
+    ret
+.print_zeros:
+    mov rdx, 6
+    mov rsi, zeros
+    mov rdi, 1
+    mov rax, 1
+    syscall
+    nop
+    leave
+    ret
+__built_in_print_int:
+    mov     rcx, rdi
+    sub     rsp, 40
+    mov     r11, rdi
+    mov     r9, -3689348814741910323
+    neg     rcx
+    lea     r8, [rsp+19]
+    cmovs   rcx, rdi
+    mov     rdi, 20
+.L3:
+    mov     rax, rcx
+    mov     r10d, edi
+    sub     r8, 1
+    mul     r9
+    mov     rax, rcx
+    sub     rdi, 1
+    shr     rdx, 3
+    lea     rsi, [rdx+rdx*4]
+    add     rsi, rsi
+    sub     rax, rsi
+    add     eax, 48
+    mov     BYTE [r8+1], al
+    mov     rax, rcx
+    mov     rcx, rdx
+    cmp     rax, 9
+    ja      .L3
+    movsx   rax, di
+    test    r11, r11
+    jns     .L4
+    lea     rdi, [r10-2]
+    movsx   rax, di
+    mov     BYTE [rsp+rax], 45
+.L4:
+    mov     edx, 20
+    lea     rsi, [rsp+rax]
+    sub     edx, edi
+    mov     rdi, 1
+    movsx   rdx, dx
+    mov     rax, 1
+    syscall
+    add     rsp, 40
+    ret
+__built_in_print_uint:
+    sub     rsp, 40
+    mov     ecx, 19
+    mov  r9, -3689348814741910323
+.L2:
+    mov     rax, rdi
+    movsx   r8, cx
+    mul     r9
+    mov     rax, rdi
+    shr     rdx, 3
+    lea     rsi, [rdx+rdx*4]
+    add     rsi, rsi
+    sub     rax, rsi
+    add     eax, 48
+    mov     BYTE [rsp+rcx], al
+    mov     rax, rdi
+    sub     rcx, 1
+    mov     rdi, rdx
+    cmp     rax, 9
+    ja      .L2
+    mov     edx, 20
+    lea     rsi, [rsp+r8]
+    mov     rdi, 1
+    sub     edx, r8d
+    movsx   rdx, dx
+    mov     rax, 1
+    syscall
+    add     rsp, 40
+    ret
+__built_in_print_bool:
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 16
+    mov     rsi, false_str
+    mov     rdx, false_str_len
+    cmp     rdi, 0
+    mov     rax, true_str
+    cmovne  rsi, rax
+    mov     rax, true_str_len
+    cmovne  rdx, rax
+    mov     rax, 1
+    mov     rdi, 1
+    syscall
+    nop
+    leave
+    ret
+main:
+    ;; Push uint64_t constant
+    mov rax, 1
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 2
+    push rax
+    ;; Arithmetic operation: sub
+    pop rbx
+    pop rax
+    ;; sub operation
+    sub rax, rbx
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 10
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 5
+    push rax
+    ;; Arithmetic operation: div
+    pop rbx
+    pop rax
+    ;; unsigned division
+    div rbx
+    push rax
+    ;; Arithmetic operation: mul
+    pop rbx
+    pop rax
+    ;; unsigned multiplication
+    mul rbx
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 100
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 50
+    push rax
+    ;; Arithmetic operation: sub
+    pop rbx
+    pop rax
+    ;; sub operation
+    sub rax, rbx
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 20
+    push rax
+    ;; Push uint64_t constant
+    mov rax, 20
+    push rax
+    ;; Arithmetic operation: mul
+    pop rbx
+    pop rax
+    ;; unsigned multiplication
+    mul rbx
+    push rax
+    ;; Arithmetic operation: mul
+    pop rbx
+    pop rax
+    ;; unsigned multiplication
+    mul rbx
+    push rax
+    ;; Arithmetic operation: add
+    pop rbx
+    pop rax
+    ;; add operation
+    add rax, rbx
+    push rax
+    ;; -- Print Uint
+    pop rdi
+    call __built_in_print_uint
+    ;; Return from main
+    mov rax, 60  ; syscall for exit
+    xor rdi, rdi ; exit status 0
+    syscall
+segment writable
+    factor dq 1000000.0
+    minus_str db "-", 0
+    dot_str db ".", 0
+    zeros db "000000", 0
+    true_str db "true", 0
+    true_str_len = $-true_str
+    false_str db "false", 0
+    false_str_len = $-false_str
