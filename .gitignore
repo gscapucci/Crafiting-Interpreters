@@ -7,10 +7,11 @@
 *.inc
 *.INC
 *.fasm
-/.API
-/.ENCODING
-/.EQUATES
-/.MACRO
-/.PCOUNT
+/API
+/ENCODING
+/EQUATES
+/MACRO
+/PCOUNT
 
 !/lox
+!lox/
