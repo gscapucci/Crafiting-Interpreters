@@ -1,6 +1,7 @@
 #include "assembly.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 static void convert_uint64_to_float64() {
 
@@ -250,17 +251,33 @@ const char *get_arithmetic_op(uint8_t instruction, ValueType type) {
 void write_comparison(FILE *file, const char *cmp_op, ValueType *type_stack, uint64_t *type_stack_size) {
     ValueType b = type_stack[--(*type_stack_size)];
     ValueType a = type_stack[--(*type_stack_size)];
+
     if (a != b) {
+        // Se os tipos são diferentes, a comparação sempre será falsa
         fprintf(file, "    ;; Comparison with different types, result = false\n");
         fprintf(file, "    push 0\n");
     } else {
-        fprintf(file, "    ;; %s comparison\n", cmp_op);
+        fprintf(file, "    ;; %s comparison using cmov\n", cmp_op);
         fprintf(file, "    pop rbx\n");
         fprintf(file, "    pop rax\n");
         fprintf(file, "    cmp rax, rbx\n");
-        fprintf(file, "    %s al\n", cmp_op);
-        fprintf(file, "    movzx rax, al\n");
+
+        // Usando variações de cmov dependendo do tipo de comparação
+        fprintf(file, "    mov rdx, 0\n"); // Coloca 0 em rdx (caso a comparação falhe)
+        fprintf(file, "    mov rax, 1\n"); // Coloca 1 em rax (caso a comparação seja verdadeira)
+
+        if (strcmp(cmp_op, "je") == 0) {          // Igual (==)
+            fprintf(file, "    cmovne rax, rdx\n");
+        } else if (strcmp(cmp_op, "jg") == 0) {   // Maior que (>)
+            fprintf(file, "    cmovle rax, rdx\n");
+        } else if (strcmp(cmp_op, "jl") == 0) {   // Menor que (<)
+            fprintf(file, "    cmovge rax, rdx\n");
+        }
+
+        fprintf(file, "    ;; Push the result of comparison (0 or 1)\n");
         fprintf(file, "    push rax\n");
     }
+
+    // Atualiza a pilha de tipos com o resultado booleano
     type_stack[(*type_stack_size)++] = VAL_BOOL;
 }

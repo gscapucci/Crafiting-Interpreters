@@ -249,7 +249,6 @@ static InterpretResult run() {
             }
             case OP_RETURN: {
                 print_value(pop());
-                printf("\n");
                 return INTERPRET_OK;
             }
         }
@@ -368,10 +367,11 @@ static CompileResult native_compile(const char *output_path) {
                 break;
             case OP_EQUAL:
                 if (type_stack_size < 2) {
+                    runtime_error("Type stack underflow in comparison.");
                     result = COMPILE_ERROR;
                     break;
                 }
-                write_comparison(output_file, "sete", type_stack, &type_stack_size);
+                write_comparison(output_file, "je", type_stack, &type_stack_size);
                 break;
             case OP_GREATER:
                 if (type_stack_size < 2) {
@@ -379,7 +379,44 @@ static CompileResult native_compile(const char *output_path) {
                     result = COMPILE_ERROR;
                     break;
                 }
-                write_comparison(output_file, "setg", type_stack, &type_stack_size);
+                write_comparison(output_file, "jg", type_stack, &type_stack_size);
+                break;
+            case OP_LESS:
+                if (type_stack_size < 2) {
+                    runtime_error("Type stack underflow in comparison.");
+                    result = COMPILE_ERROR;
+                    break;
+                }
+                write_comparison(output_file, "jl", type_stack, &type_stack_size);
+                break;
+            case OP_NOT:
+                if (type_stack_size < 1) {
+                    runtime_error("Type stack underflow in OP_NOT.");
+                    result = COMPILE_ERROR;
+                    break;
+                }
+
+                ValueType a = type_stack[--type_stack_size];
+
+                // A operação NOT só pode ser aplicada a tipos booleanos.
+                if (a != VAL_BOOL) {
+                    runtime_error("OP_NOT requires a boolean type.");
+                    result = COMPILE_ERROR;
+                    break;
+                }
+
+                fprintf(output_file, "    ;; -- OP_NOT --\n");
+                fprintf(output_file, "    pop rax\n");  // Pegue o valor do topo da pilha
+
+                // Inverte o valor booleano: se for 0 (false), vira 1 (true); se for 1 (true), vira 0 (false)
+                fprintf(output_file, "    cmp rax, 0\n");     // Compara com 0
+                fprintf(output_file, "    mov rbx, 0\n");     // Prepara rbx com 0 (false)
+                fprintf(output_file, "    mov rcx, 1\n");     // Prepara rcx com 1 (true)
+                fprintf(output_file, "    cmove rax, rcx\n"); // Se rax == 0, mova 1 para rax
+                fprintf(output_file, "    cmovne rax, rbx\n"); // Se rax != 0, mova 0 para rax
+                fprintf(output_file, "    push rax\n");        // Empurra o valor de volta na pilha
+
+                type_stack[type_stack_size++] = VAL_BOOL; // O resultado será booleano
                 break;
             case OP_ADD:
             case OP_SUBTRACT:

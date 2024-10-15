@@ -63,7 +63,7 @@ static void compile_file_to_linux_x64_64(const char *path) {
 
     if (result == COMPILE_ERROR) exit(30);
 
-    printf("== Assembly output ====\n");
+    // printf("== Assembly output ====\n");
 
     char path1[500] = {0};
     size_t path_len = strlen(path);
@@ -77,24 +77,24 @@ static void compile_file_to_linux_x64_64(const char *path) {
         exit(1);
     }
 
-    char *file = read_file(path1);
-    printf("%s\n", file);
-    free(file);
+    // char *file = read_file(path1);
+    // printf("%s\n", file);
+    // free(file);
 
     char command[1000] = {0};
-    snprintf(command, sizeof(command), "fasm %s", path1);
-    fprintf(stderr, "DEBUG: %s\n", command);
+    snprintf(command, sizeof(command), "fasm %s > /dev/null", path1);
+    // fprintf(stderr, "DEBUG: %s\n", command);
     if (system(command)) {
         fprintf(stderr, "Compilation fail\n");
         exit(1);
     }
 
-    snprintf(command, sizeof(command), "./%.*s", (int)(strlen(path1) - strlen(".fasm")), path1);
-    fprintf(stderr, "DEBUG: %s\n", command);
-    if (system(command)) {
-        fprintf(stderr, "Execution fail\n");
-        exit(1);
-    }
+    // snprintf(command, sizeof(command), "%.*s", (int)(strlen(path1) - strlen(".fasm")), path1);
+    // fprintf(stderr, "DEBUG: %s\n", command);
+    // if (system(command)) {
+    //     fprintf(stderr, "Execution fail\n");
+    //     exit(1);
+    // }
 }
 
 static void print_usage() {
