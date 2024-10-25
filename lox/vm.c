@@ -60,24 +60,79 @@ void init_VM() {
     reset_stack();
     vm.objects = NULL;
     vm.options = OPT_NONE;
+    init_table(&vm.globals);
     init_table(&vm.strings);
 }
 
 void free_VM() {
+    free_table(&vm.globals);
     free_table(&vm.strings);
     free_objects();
+}
+
+static int64_t string_to_int64(const char *str, size_t len) {
+    int64_t result = 0;
+    bool negative = false;
+    size_t i = 0;
+
+    // Ignora espaços em branco no início da string
+    while (i < len && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n' || str[i] == '\r')) {
+        i++;
+    }
+
+    // Verifica se o número é negativo
+    if (i < len && str[i] == '-') {
+        negative = true;
+        i++;
+    } else if (i < len && str[i] == '+') {
+        i++; // Ignora o sinal positivo
+    }
+
+    // Converte a string para int64_t
+    while (i < len && str[i] >= '0' && str[i] <= '9') {
+        result = result * 10 + (str[i] - '0');
+        i++;
+    }
+
+    // Retorna o número com o sinal correto
+    return negative ? -result : result;
+}
+
+static uint64_t string_to_uint64(const char *str, size_t len) {
+    uint64_t result = 0;
+    size_t i = 0;
+
+    // Ignora espaços em branco no início da string
+    while (i < len && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n' || str[i] == '\r')) {
+        i++;
+    }
+
+    // Verifica se o número é negativo
+    if (i < len && str[i] == '-') {
+        return 0;
+    } else if (i < len && str[i] == '+') {
+        i++; // Ignora o sinal positivo
+    }
+
+    while (i < len && str[i] >= '0' && str[i] <= '9') {
+        result = result * 10 + (str[i] - '0');
+        i++;
+    }
+
+    return result;
 }
 
 static InterpretResult run() {
     #define READ_BYTE() (*vm.ip++)
     #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+    #define READ_STRING() AS_STRING(READ_CONSTANT())
 
     for (;;) {
         #ifdef DEBUG_TRACE_EXECUTION
             printf("          ");
             for (Value *slot = vm.stack; slot < vm.stack_top; slot++) {
                 printf("[ ");
-                print_value(*slot);
+                print_value_dbg(*slot);
                 printf(" ]");
             }
             printf("\n");
@@ -94,6 +149,42 @@ static InterpretResult run() {
             case OP_NIL: push(NIL_VAL); break;
             case OP_TRUE: push(BOOL_VAL(true)); break;
             case OP_FALSE: push(BOOL_VAL(false)); break;
+            case OP_POP: pop(); break;
+            case OP_GET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                push(vm.stack[slot]);
+                break;
+            }
+            case OP_SET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                vm.stack[slot] = peek(0);
+                break;
+            }
+            case OP_GET_GLOBAL: {
+                ObjString *name = READ_STRING();
+                Value value;
+                if(!table_get(&vm.globals, name, &value)) {
+                    runtime_error("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(value);
+                break;
+            }
+            case OP_DEFINE_GLOBAL: {
+                ObjString* name = READ_STRING();
+                table_set(&vm.globals, name, peek(0));
+                pop();
+                break;
+            }
+            case OP_SET_GLOBAL: {
+                ObjString *name = READ_STRING();
+                if(table_set(&vm.globals, name, peek(0))) {
+                    table_delete(&vm.globals, name);
+                    runtime_error("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -247,15 +338,103 @@ static InterpretResult run() {
                 push(a);
                 break;
             }
-            case OP_RETURN: {
+            case OP_PRINT: {
                 print_value(pop());
+                printf("\n");
+                break;
+            }
+            case OP_RETURN: {
+                //EXIT INTERPRETER
                 return INTERPRET_OK;
+            }
+            case OP_CAST_AS_INT: {
+                Value a = pop();
+                a.type = VAL_INT;
+                push(a);
+                break;
+            }
+            case OP_CAST_AS_UINT: {
+                Value a = pop();
+                a.type = VAL_UINT;
+                push(a);
+                break;
+            }
+            case OP_CAST_TO_INT: {
+                Value a = pop();
+                switch (a.type)
+                {
+                    case VAL_BOOL:
+                        a = AS_BOOL(a) ? INT_VAL(1) : INT_VAL(0);
+                        break;
+                    case VAL_FLOAT:
+                        a = INT_VAL((int64_t)AS_FLOAT(a));
+                        break;
+                    case VAL_INT:
+                        break;
+                    case VAL_UINT:
+                        if(AS_INT(a) < 0) {
+                            runtime_error("Can not convert negative integer to unsigned integer, but you can reinterpret using \"as_uint\"");
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                        a = UINT_VAL((uint64_t)AS_INT(a));
+                        break;
+                    case VAL_NIL:
+                        a = INT_VAL(0);
+                        break;
+                    case VAL_OBJ:
+                        if(AS_OBJ(a)->type == OBJ_STRING) {
+                            int64_t num = string_to_int64(AS_STRING(a)->chars, AS_STRING(a)->length);
+                            a = INT_VAL(num);
+                        } else {
+                            runtime_error("OP_CAST_TO_INT Unknown obj_type = %d", AS_OBJ(a)->type);
+                        }
+                        break;
+                    default:
+                        runtime_error("OP_CAST_TO_INT Unknown type ID = %d", a.type);
+                        return INTERPRET_RUNTIME_ERROR;
+                }
+                push(a);
+                break;
+            }
+            case OP_CAST_TO_UINT: {
+                Value a = pop();
+
+                switch(a.type) {
+                    case VAL_BOOL:
+                        a = AS_BOOL(a) ? UINT_VAL(1) : UINT_VAL(0);
+                        break;
+                    case VAL_FLOAT:
+                        a = AS_FLOAT(a) < 0.0 ? UINT_VAL(0) : UINT_VAL(1);
+                        break;
+                    case VAL_INT:
+                        a = AS_INT(a) < 0 ? UINT_VAL(0) : UINT_VAL(AS_INT(a));
+                        break;
+                    case VAL_UINT:
+                        break;
+                    case VAL_NIL:
+                        a = INT_VAL(0);
+                        break;
+                    case VAL_OBJ:
+                        if(AS_OBJ(a)->type == OBJ_STRING) {
+                            uint64_t num = string_to_uint64(AS_STRING(a)->chars, AS_STRING(a)->length);
+                            a = INT_VAL(num);
+                        } else {
+                            runtime_error("OP_CAST_TO_INT Unknown obj_type = %d", AS_OBJ(a)->type);
+                        }
+                    default:
+                        break;
+                        runtime_error("Unknown type ID = %d", a.type);
+                        return INTERPRET_RUNTIME_ERROR;
+                }
+                push(a);
+                break;
             }
         }
     }
 
     #undef READ_BYTE
     #undef READ_CONSTANT
+    #undef READ_STRING
 }
 
 InterpretResult interpret(const char *source) {
@@ -266,7 +445,6 @@ InterpretResult interpret(const char *source) {
         free_chunk(&chunk);
         return INTERPRET_COMPILE_ERROR;
     }
-
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
 

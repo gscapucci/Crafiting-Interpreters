@@ -103,17 +103,53 @@ static TokenType check_keyword(int start, int length, const char *rest, TokenTyp
     return TOKEN_IDENTIFIER;
 }
 
+static bool is_identifier_length_at_least(int length) {
+    return (scanner.current - scanner.start) > length;
+}
+
+static TokenType identifier_with_prefix(char first, char second, int len1, int len2, const char* suffix, TokenType token) {
+    if (is_identifier_length_at_least(len1)) {
+        return check_keyword(len1, len2, suffix, token);
+    }
+    return TOKEN_IDENTIFIER;
+}
+
+// Função que lida com a palavra-chave "to_int" e "to_uint"
+static TokenType check_to_functions() {
+    if (is_identifier_length_at_least(3) && scanner.start[2] == '_') {
+        switch (scanner.start[3]) {
+            case 'i': return check_keyword(4, 2, "nt", TOKEN_TO_INT);
+            case 'u': return check_keyword(4, 3, "int", TOKEN_TO_UINT);
+        }
+    }
+    return TOKEN_IDENTIFIER;
+}
+
 static TokenType identifier_type() {
     switch (scanner.start[0]) {
-        case 'a': return check_keyword(1, 2, "nd", TOKEN_AND);
+        case 'a': 
+            if (is_identifier_length_at_least(1)) {
+                switch (scanner.start[1]) {
+                    case 'n': return check_keyword(2, 1, "d", TOKEN_AND);
+                    case 's': // Tratamento para "as", "as_int" e "as_uint"
+                        if (is_identifier_length_at_least(5)) {
+                            switch (scanner.start[3]) {
+                                case 'i': return check_keyword(4, 2, "nt", TOKEN_AS_INT);   // Verifica "as_int"
+                                case 'u': return check_keyword(4, 3, "int", TOKEN_AS_UINT); // Verifica "as_uint"
+                            }
+                        }
+                        break;
+                }
+            }
+            break;
         case 'c': return check_keyword(1, 4, "lass", TOKEN_CLASS);
         case 'e': return check_keyword(1, 3, "lse", TOKEN_ELSE);
         case 'f':
-            if(scanner.current - scanner.start > 1) {
-                switch(scanner.start[1]) {
+            if (is_identifier_length_at_least(1)) {
+                switch (scanner.start[1]) {
                     case 'a': return check_keyword(2, 3, "lse", TOKEN_FALSE);
                     case 'o': return check_keyword(2, 1, "r", TOKEN_FOR);
-                    case 'u': return check_keyword(2, 1, "q", TOKEN_FUN);
+                    case 'u': return check_keyword(2, 1, "n", TOKEN_FUN);
                 }
             }
             break;
@@ -124,10 +160,11 @@ static TokenType identifier_type() {
         case 'r': return check_keyword(1, 5, "eturn", TOKEN_RETURN);
         case 's': return check_keyword(1, 4, "uper", TOKEN_SUPER);
         case 't':
-            if(scanner.current - scanner.start > 1) {
-                switch(scanner.start[1]) {
+            if (is_identifier_length_at_least(1)) {
+                switch (scanner.start[1]) {
                     case 'h': return check_keyword(2, 2, "is", TOKEN_THIS);
                     case 'r': return check_keyword(2, 2, "ue", TOKEN_TRUE);
+                    case 'o': return check_to_functions();
                 }
             }
             break;

@@ -39,6 +39,17 @@ void print_value(Value value) {
     }
 }
 
+void print_value_dbg(Value value) {
+    switch(value.type) {
+        case VAL_BOOL:  printf("(Bool)%s", AS_BOOL(value) ? "true" : "false");break;
+        case VAL_NIL:   printf("(Nil)"); break;
+        case VAL_FLOAT: printf("(Float)%lf", AS_FLOAT(value)); break;
+        case VAL_INT:   printf("(Int)%ld", AS_INT(value)); break;
+        case VAL_UINT:  printf("(Uint)%lu", AS_UINT(value)); break;
+        case VAL_OBJ:   print_object(value); break;
+    }
+}
+
 bool values_equal(Value a, Value b) {
     if(a.type != b.type) return false;
     switch(a.type) {

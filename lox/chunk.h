@@ -9,6 +9,12 @@ typedef enum {
     OP_NIL,
     OP_TRUE,
     OP_FALSE,
+    OP_POP,
+    OP_GET_LOCAL,
+    OP_SET_LOCAL,
+    OP_GET_GLOBAL,
+    OP_DEFINE_GLOBAL,
+    OP_SET_GLOBAL,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,
@@ -18,7 +24,12 @@ typedef enum {
     OP_DIVIDE,
     OP_NOT,
     OP_NEGATE,
+    OP_PRINT,
     OP_RETURN,
+    OP_CAST_AS_INT,
+    OP_CAST_AS_UINT,
+    OP_CAST_TO_INT,
+    OP_CAST_TO_UINT,
 } OpCode;
 
 typedef struct {

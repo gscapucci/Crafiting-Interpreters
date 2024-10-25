@@ -13,7 +13,7 @@ void disassemble_chunk(Chunk *chunk, const char *name) {
 static int constant_instruction(const char *name, Chunk *chunk, int offset) {
     uint8_t constant = chunk->code[offset + 1];
     printf("%-16s %4d '", name, constant);
-    print_value(chunk->constants.values[constant]);
+    print_value_dbg(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 2;
 }
@@ -21,6 +21,12 @@ static int constant_instruction(const char *name, Chunk *chunk, int offset) {
 static int simple_instruction(const char *name, int offset) {
     printf("%s\n", name);
     return offset + 1;
+}
+
+static int byte_instruction(const char *name, Chunk *chunk, int offset) {
+    uint8_t slot = chunk->code[offset + 1];
+    printf("%-16s %4d\n", name, slot);
+    return offset + 2;
 }
 
 int disassemble_instruction(Chunk *chunk, int offset) {
@@ -42,6 +48,18 @@ int disassemble_instruction(Chunk *chunk, int offset) {
             return simple_instruction("OP_TRUE", offset);
         case OP_FALSE:
             return simple_instruction("OP_FALSE", offset);
+        case OP_POP:
+            return simple_instruction("OP_POP", offset);
+        case OP_GET_LOCAL:
+            return byte_instruction("OP_GET_LOCAL", chunk, offset);
+        case OP_SET_LOCAL:
+            return byte_instruction("OP_SET_LOCAL", chunk, offset);
+        case OP_GET_GLOBAL:
+            return constant_instruction("OP_GET_GLOBAL", chunk, offset);
+        case OP_DEFINE_GLOBAL:
+            return constant_instruction("OP_DEFINE_GLOBAL", chunk, offset);
+        case OP_SET_GLOBAL:
+            return constant_instruction("OP_SET_GLOBAL", chunk, offset);
         case OP_EQUAL:
             return simple_instruction("OP_EQUAL", offset);
         case OP_GREATER:
@@ -60,8 +78,18 @@ int disassemble_instruction(Chunk *chunk, int offset) {
             return simple_instruction("OP_NOT", offset);
         case OP_NEGATE:
             return simple_instruction("OP_NEGATE", offset);
+        case OP_PRINT:
+            return simple_instruction("OP_PRINT", offset);
         case OP_RETURN:
             return simple_instruction("OP_RETURN", offset);
+        case OP_CAST_AS_INT:
+            return simple_instruction("OP_CAST_AS_INT", offset);
+        case OP_CAST_AS_UINT:
+            return simple_instruction("OP_CAST_AS_UINT", offset);
+        case OP_CAST_TO_INT:
+            return simple_instruction("OP_CAST_TO_INT", offset);
+        case OP_CAST_TO_UINT:
+            return simple_instruction("OP_CAST_TO_UINT", offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset + 1;
